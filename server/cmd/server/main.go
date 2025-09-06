@@ -26,7 +26,7 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /health", healthHandler.HealthCheck)
+	mux.HandleFunc("GET /healthz", healthHandler.HealthCheck)
 
 	mux.HandleFunc("GET /api/users", userHandler.GetUsers)
 	mux.HandleFunc("POST /api/users", userHandler.CreateUser)
