@@ -39,7 +39,7 @@ func ToUsersResponse(users []*model.User) UsersResponse {
 	for i, user := range users {
 		userResponses[i] = ToUserResponse(user)
 	}
-	
+
 	return UsersResponse{
 		Users: userResponses,
 		Count: len(userResponses),
