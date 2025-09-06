@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 import { FILTERS, FilterId, applyFilter } from "./filters";
+import { NOISES, NoiseId, applyNoise } from "./noise";
 
 type StreamState = "idle" | "starting" | "running" | "stopped" | "error";
 
@@ -22,8 +23,12 @@ export default function CameraFiltersPage() {
   const filterRef = useRef<FilterId>("retro");
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
   // 予備の強度スライダー等は必要に応じて追加可能
+  const [noiseEnabled, setNoiseEnabled] = useState<boolean>(false);
+  const [noiseId, setNoiseId] = useState<NoiseId>("dropout");
+  const [noiseStrength, setNoiseStrength] = useState<number>(50);
 
   const filterOptions = useMemo(() => FILTERS, []);
+  const noiseOptions = useMemo(() => NOISES, []);
 
   const stopCamera = useCallback(() => {
     if (rafRef.current) {
@@ -96,6 +101,9 @@ export default function CameraFiltersPage() {
           ctx.drawImage(v, 0, 0, cw, ch);
           const frame = ctx.getImageData(0, 0, cw, ch);
           applyFilter(frame, filterRef.current);
+          if (noiseEnabledRef.current) {
+            applyNoise(frame, noiseIdRef.current, noiseStrengthRef.current);
+          }
           ctx.putImageData(frame, 0, 0);
         }
         rafRef.current = requestAnimationFrame(loop);
@@ -120,6 +128,20 @@ export default function CameraFiltersPage() {
   useEffect(() => {
     filterRef.current = filter;
   }, [filter]);
+
+  // ノイズ参照用の ref 群
+  const noiseEnabledRef = useRef<boolean>(false);
+  const noiseIdRef = useRef<NoiseId>("dropout");
+  const noiseStrengthRef = useRef<number>(50);
+  useEffect(() => {
+    noiseEnabledRef.current = noiseEnabled;
+  }, [noiseEnabled]);
+  useEffect(() => {
+    noiseIdRef.current = noiseId;
+  }, [noiseId]);
+  useEffect(() => {
+    noiseStrengthRef.current = noiseStrength;
+  }, [noiseStrength]);
 
   const onToggle = useCallback(() => {
     if (state === "running" || state === "starting") {
@@ -156,6 +178,41 @@ export default function CameraFiltersPage() {
             </option>
           ))}
         </select>
+        <label className={styles.checkbox} title="フィルターとは独立して適用されます">
+          <input
+            type="checkbox"
+            checked={noiseEnabled}
+            onChange={(e) => setNoiseEnabled(e.target.checked)}
+            disabled={!isRunning && !isBusy}
+          />
+          ノイズ有効
+        </label>
+        <select
+          className={styles.select}
+          value={noiseId}
+          onChange={(e) => setNoiseId(e.target.value as NoiseId)}
+          disabled={!noiseEnabled || (!isRunning && !isBusy)}
+          aria-label="ノイズ"
+        >
+          {noiseOptions.map((n) => (
+            <option key={n.id} value={n.id}>
+              {n.label}
+            </option>
+          ))}
+        </select>
+        <label className={styles.hint} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          強度
+          <input
+            className={styles.range}
+            type="range"
+            min={0}
+            max={100}
+            value={noiseStrength}
+            onChange={(e) => setNoiseStrength(parseInt(e.target.value, 10))}
+            disabled={!noiseEnabled || (!isRunning && !isBusy)}
+          />
+          <span>{noiseStrength}</span>
+        </label>
         <select
           className={styles.select}
           value={facingMode}
