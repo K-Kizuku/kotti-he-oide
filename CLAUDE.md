@@ -188,6 +188,25 @@ infra/
 - Code comments should be in Japanese when possible
 - Variable/function names can be in English, but documentation should be in Japanese
 
+## Code Quality Requirements (MANDATORY)
+
+**Always run lint checks before committing any code changes:**
+
+### Frontend Lint Check
+```bash
+cd frontend
+pnpm lint    # Must pass without errors
+```
+
+### Backend Lint Check
+```bash
+cd server
+make fmt     # Format code
+make lint    # Must pass without errors
+```
+
+**IMPORTANT**: Committing or pushing code with lint errors is strictly prohibited. The CI/CD pipeline also enforces these checks automatically.
+
 ## Database Schema
 
 The project includes a comprehensive PostgreSQL schema (`server/schema.sql`) for:

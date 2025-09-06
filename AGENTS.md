@@ -32,8 +32,14 @@ Docker（本番環境）
 - `docker build -t web:latest ./frontend` フロントエンドビルド
 
 ## Coding Style & Naming Conventions
-- Frontend: 2 スペース、TypeScript。コンポーネントは `PascalCase.tsx`、ルートは小文字ケバブ。CSS は `*.module.css`。ESLint を通すこと。
-- Server: `gofmt` 準拠。公開識別子は `CamelCase`、パッケージ名は小文字。`panic` 禁止、エラーは戻り値で連鎖させる。
+- Frontend: 2 スペース、TypeScript。コンポーネントは `PascalCase.tsx`、ルートは小文字ケバブ。CSS は `*.module.css`。**ESLint を必ず通すこと（`pnpm lint`）**。
+- Server: `gofmt` 準拠。公開識別子は `CamelCase`、パッケージ名は小文字。`panic` 禁止、エラーは戻り値で連鎖させる。**必ず `make fmt && make lint` を実行すること**。
+
+## Code Quality Rules (必須)
+**すべてのコード変更時に以下を実行し、エラーがないことを確認する：**
+- フロントエンド: `cd frontend && pnpm lint`
+- バックエンド: `cd server && make fmt && make lint`
+- **lintエラーが残っている状態でのコミット・プッシュは禁止**
 
 ## Testing Guidelines
 - Server: `_test.go` にテーブル駆動で `TestXxx` を作成。例: `go test -cover ./...`。副作用はモック/インメモリを使用。
@@ -63,4 +69,5 @@ Docker（本番環境）
 - 自動化エージェントは本ガイドのコマンドのみ実行し、設定ファイルの不要変更を避ける。ネストした `AGENTS.md` がある場合は最も深い階層を優先。
 - Web Push機能の実装時は `TODO.md` の仕様書を参照すること。
 - カメラ機能の拡張時は `frontend/CAMERA_memo.md` の実装メモを確認すること。
+- **コード変更後は必ずlintチェックを実行し、エラーがないことを確認してからコミットすること**
 

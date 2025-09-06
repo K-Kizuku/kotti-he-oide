@@ -135,6 +135,15 @@ frontend/
 - カスタムドメインエラー型を通じてエラーを処理
 - 疎結合のために依存性注入を使用
 
+## コード品質管理
+
+**必須ルール: すべてのコード変更時にlintチェックを実行し、エラーがないことを確認する**
+
+- フロントエンド: `cd frontend && pnpm lint`
+- バックエンド: `cd server && make fmt && make lint`
+- lintエラーが残っている状態でのコミット・プッシュは禁止
+- CI/CDパイプラインでもlintチェックが自動実行される
+
 ## CI/CD構造 (.github/workflows/)
 
 GitHub Actionsによる自動デプロイメント：

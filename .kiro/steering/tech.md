@@ -25,11 +25,30 @@
 - **CI/CD**: GitHub Actions（ECR/ECS自動デプロイ）
 
 ## 開発ツール
-- **リンティング**: Next.js設定でのESLint
-- **コードフォーマット**: バックエンド用Go fmt
+- **リンティング**: Next.js設定でのESLint（**必須実行**）
+- **コードフォーマット**: バックエンド用Go fmt（**必須実行**）
 - **オプションツール**: air (Goホットリロード用), golangci-lint (Goリンティング用)
 - **コンテナ**: Docker（マルチステージビルド対応）
 - **MCP**: Model Context Protocol設定（context7サーバー）
+
+## コード品質チェック（必須）
+
+**すべてのコード変更時に以下を実行し、エラーがないことを確認すること：**
+
+### フロントエンド
+```bash
+cd frontend
+pnpm lint    # ESLintチェック（エラーがあれば修正必須）
+```
+
+### バックエンド
+```bash
+cd server
+make fmt     # コードフォーマット
+make lint    # golangci-lintチェック（エラーがあれば修正必須）
+```
+
+**注意**: lintエラーが残っている状態でのコミット・プッシュは禁止
 
 ## 主要ライブラリ
 ### バックエンド
