@@ -10,7 +10,8 @@ export type FilterId =
   | "serious"
   | "vhs"
   | "comic"
-  | "vignette"; // 追加: ビネット（周辺減光）のみ
+  | "vignette" // 追加: ビネット（周辺減光）のみ
+  | "customVignette"; // 追加: カスタムビネット（カラー/ノイズ/影/強ビネット）
 
 export type FilterSpec = {
   id: FilterId;
@@ -25,6 +26,11 @@ export const FILTERS: FilterSpec[] = [
   { id: "vhs", label: "VHS/グリッチ（色ずれ/走査線）", description: "色チャンネルのずれ + 走査線" },
   { id: "comic", label: "コミック（ポスタライズ/輪郭）", description: "色段階化 + Sobel輪郭" },
   { id: "vignette", label: "ビネット（周辺減光のみ）", description: "映像の周辺を暗く落として被写体を強調" },
+  {
+    id: "customVignette",
+    label: "カスタムビネット（#269f7e/ノイズ/影/強）",
+    description: "#269f7e カラー被せ + 粒状ノイズ + 黒いシャドウ + 強いビネット",
+  },
 ];
 
 const clampByte = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v) | 0;
@@ -66,6 +72,62 @@ function addScanlines(data: Uint8ClampedArray, w: number, h: number, darkness = 
       data[i] = clampByte(data[i] * factor);
       data[i + 1] = clampByte(data[i + 1] * factor);
       data[i + 2] = clampByte(data[i + 2] * factor);
+    }
+  }
+}
+
+// 単色オーバーレイ（リニアブレンド）。alpha=0..1
+function applyColorOverlay(
+  data: Uint8ClampedArray,
+  color: { r: number; g: number; b: number },
+  alpha: number
+) {
+  const ar = color.r;
+  const ag = color.g;
+  const ab = color.b;
+  const a = Math.max(0, Math.min(1, alpha));
+  const ia = 1 - a;
+  for (let i = 0; i < data.length; i += 4) {
+    data[i] = clampByte(data[i] * ia + ar * a);
+    data[i + 1] = clampByte(data[i + 1] * ia + ag * a);
+    data[i + 2] = clampByte(data[i + 2] * ia + ab * a);
+  }
+}
+
+// 粒状ノイズを加える（モノクロ寄り）。amount は ±amount の範囲で加算。
+function addGrainNoise(data: Uint8ClampedArray, amount = 10) {
+  const amp = amount | 0;
+  for (let i = 0; i < data.length; i += 4) {
+    const n = (Math.random() - 0.5) * 2 * amp; // ±amp
+    data[i] = clampByte(data[i] + n);
+    data[i + 1] = clampByte(data[i + 1] + n * 0.9);
+    data[i + 2] = clampByte(data[i + 2] + n * 0.8);
+  }
+}
+
+// 中心からの距離に応じて黒いシャドウを追加（ビネットを補助）。
+// radius: シャドウが効き始める相対半径（0..1）、intensity: エッジ側の暗さ（0..1）
+function addRadialShadow(
+  data: Uint8ClampedArray,
+  w: number,
+  h: number,
+  radius = 0.6,
+  intensity = 0.4
+) {
+  const cx = w * 0.5;
+  const cy = h * 0.5;
+  const maxD = Math.sqrt(cx * cx + cy * cy);
+  const r = Math.max(0, Math.min(0.98, radius));
+  const k = Math.max(0, Math.min(1, intensity));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const d = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+      const t = Math.max(0, (d / maxD - r) / (1 - r)); // 0..1
+      const m = 1 - k * t * t; // 二乗で滑らかに
+      data[i] = clampByte(data[i] * m);
+      data[i + 1] = clampByte(data[i + 1] * m);
+      data[i + 2] = clampByte(data[i + 2] * m);
     }
   }
 }
@@ -233,6 +295,19 @@ export function applyComic(image: ImageData) {
   }
 }
 
+// カスタムビネット: #269f7e のカラーオーバーレイ + 粒状ノイズ + 黒シャドウ + 強ビネット
+export function applyCustomVignette(image: ImageData) {
+  const { data, width: w, height: h } = image;
+  // 1) カラーオーバーレイ（#269f7e）
+  applyColorOverlay(data, { r: 0x26, g: 0x9f, b: 0x7e }, 0.22);
+  // 2) 粒状ノイズを軽く付加
+  addGrainNoise(data, 12);
+  // 3) 強いビネット（周辺減光）
+  applyVignette(data, w, h, 0.68);
+  // 4) 外周にかけて更に黒いシャドウを追加
+  addRadialShadow(data, w, h, 0.62, 0.45);
+}
+
 export function applyFilter(image: ImageData, id: FilterId) {
   switch (id) {
     case "retro":
@@ -247,6 +322,8 @@ export function applyFilter(image: ImageData, id: FilterId) {
       return applyComic(image);
     case "vignette":
       return applyVignetteOnly(image);
+    case "customVignette":
+      return applyCustomVignette(image);
     default:
       return;
   }

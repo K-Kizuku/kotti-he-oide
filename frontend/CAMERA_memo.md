@@ -61,6 +61,13 @@ pnpm dev
   - セピア変換、粒子ノイズ（微小ランダム）、ビネット、走査線でフィルム風。
 - `vignette`（ビネット）
   - 周辺減光のみを適用して被写体を強調。`applyVignette(data, w, h, 0.5)` を利用。
+- `customVignette`（カスタムビネット）
+  - `#269f7e` のカラーオーバーレイ、粒状ノイズ付加、黒いシャドウ、強いビネットを1つに統合。
+  - 実装: `applyCustomVignette(image)`
+    1. `applyColorOverlay(data, { r: 0x26, g: 0x9f, b: 0x7e }, 0.22)`
+    2. `addGrainNoise(data, 12)`
+    3. `applyVignette(data, w, h, 0.68)`
+    4. `addRadialShadow(data, w, h, 0.62, 0.45)`
 - `horror`（ホラー）
   - 低彩度化 → 緑被り寄せ → 強コントラスト。暗部にランダムノイズで不穏さ。
 - `serious`（シリアス）
