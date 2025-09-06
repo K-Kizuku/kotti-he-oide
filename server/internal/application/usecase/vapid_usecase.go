@@ -22,7 +22,7 @@ func NewVAPIDUseCase(vapidService *service.VAPIDService) *VAPIDUseCase {
 
 func (vu *VAPIDUseCase) GetPublicKey() *GetVAPIDPublicKeyResponse {
 	publicKey := vu.vapidService.GetPublicKey()
-	
+
 	return &GetVAPIDPublicKeyResponse{
 		PublicKey: publicKey,
 		Success:   true,

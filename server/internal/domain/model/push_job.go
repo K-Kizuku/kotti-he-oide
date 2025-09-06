@@ -43,19 +43,19 @@ func (p PushPayload) ToJSON() ([]byte, error) {
 }
 
 type PushJob struct {
-	id              valueobject.JobID
-	idempotencyKey  string
-	userID          *valueobject.UserID
-	topic           string
-	urgency         Urgency
-	ttlSeconds      int
-	payload         PushPayload
-	scheduleAt      *time.Time
-	status          JobStatus
-	retryCount      int
-	lastError       string
-	createdAt       time.Time
-	updatedAt       time.Time
+	id             valueobject.JobID
+	idempotencyKey string
+	userID         *valueobject.UserID
+	topic          string
+	urgency        Urgency
+	ttlSeconds     int
+	payload        PushPayload
+	scheduleAt     *time.Time
+	status         JobStatus
+	retryCount     int
+	lastError      string
+	createdAt      time.Time
+	updatedAt      time.Time
 }
 
 func NewPushJob(
@@ -78,19 +78,19 @@ func NewPushJob(
 
 	now := time.Now()
 	return &PushJob{
-		id:              id,
-		idempotencyKey:  idempotencyKey,
-		userID:          userID,
-		topic:           topic,
-		urgency:         urgency,
-		ttlSeconds:      ttlSeconds,
-		payload:         payload,
-		scheduleAt:      scheduleAt,
-		status:          JobStatusPending,
-		retryCount:      0,
-		lastError:       "",
-		createdAt:       now,
-		updatedAt:       now,
+		id:             id,
+		idempotencyKey: idempotencyKey,
+		userID:         userID,
+		topic:          topic,
+		urgency:        urgency,
+		ttlSeconds:     ttlSeconds,
+		payload:        payload,
+		scheduleAt:     scheduleAt,
+		status:         JobStatusPending,
+		retryCount:     0,
+		lastError:      "",
+		createdAt:      now,
+		updatedAt:      now,
 	}, nil
 }
 
@@ -109,19 +109,19 @@ func ReconstructPushJob(
 	createdAt, updatedAt time.Time,
 ) *PushJob {
 	return &PushJob{
-		id:              id,
-		idempotencyKey:  idempotencyKey,
-		userID:          userID,
-		topic:           topic,
-		urgency:         urgency,
-		ttlSeconds:      ttlSeconds,
-		payload:         payload,
-		scheduleAt:      scheduleAt,
-		status:          status,
-		retryCount:      retryCount,
-		lastError:       lastError,
-		createdAt:       createdAt,
-		updatedAt:       updatedAt,
+		id:             id,
+		idempotencyKey: idempotencyKey,
+		userID:         userID,
+		topic:          topic,
+		urgency:        urgency,
+		ttlSeconds:     ttlSeconds,
+		payload:        payload,
+		scheduleAt:     scheduleAt,
+		status:         status,
+		retryCount:     retryCount,
+		lastError:      lastError,
+		createdAt:      createdAt,
+		updatedAt:      updatedAt,
 	}
 }
 

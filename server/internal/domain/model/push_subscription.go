@@ -8,7 +8,7 @@ import (
 
 type PushSubscription struct {
 	id             valueobject.SubscriptionID
-	userID         *valueobject.UserID 
+	userID         *valueobject.UserID
 	endpoint       valueobject.PushEndpoint
 	keys           valueobject.PushKeys
 	userAgent      string

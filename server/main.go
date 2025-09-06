@@ -28,7 +28,7 @@ func main() {
 	// Web Push dependencies (using memory repositories for now)
 	// TODO: Replace with actual PostgreSQL implementations
 	subscriptionRepo := persistence.NewMemoryPushSubscriptionRepository()
-	jobRepo := persistence.NewMemoryPushJobRepository() 
+	jobRepo := persistence.NewMemoryPushJobRepository()
 	logRepo := persistence.NewMemoryPushLogRepository()
 
 	// Initialize VAPID service

@@ -8,13 +8,13 @@ import (
 )
 
 type PushLog struct {
-	id               int64
-	jobID            *valueobject.JobID
-	subscriptionID   *valueobject.SubscriptionID
-	responseStatus   *int
-	responseHeaders  map[string]string
-	errorMessage     string
-	createdAt        time.Time
+	id              int64
+	jobID           *valueobject.JobID
+	subscriptionID  *valueobject.SubscriptionID
+	responseStatus  *int
+	responseHeaders map[string]string
+	errorMessage    string
+	createdAt       time.Time
 }
 
 func NewPushLog(

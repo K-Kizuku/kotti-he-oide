@@ -110,7 +110,7 @@ func (pss *PushSenderService) processJob(ctx context.Context, job *model.PushJob
 		job.MarkAsFailed(fmt.Sprintf("All %d deliveries failed", failureCount))
 	} else {
 		job.MarkAsSucceeded()
-		log.Printf("Job %s completed with partial success: %d succeeded, %d failed", 
+		log.Printf("Job %s completed with partial success: %d succeeded, %d failed",
 			job.ID().String(), successCount, failureCount)
 	}
 
@@ -149,7 +149,7 @@ func (pss *PushSenderService) sendToSubscription(
 	resp, err := webpush.SendNotificationWithContext(ctx, payload, webpushSubscription, options)
 
 	logID, _ := pss.logRepo.NextIdentity(ctx)
-	
+
 	if err != nil {
 		jobID := job.ID()
 		subscriptionID := subscription.ID()
@@ -190,7 +190,7 @@ func (pss *PushSenderService) sendToSubscription(
 	if resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusGone {
 		subscription.MarkAsInvalid()
 		pss.subscriptionRepo.Save(ctx, subscription)
-		log.Printf("Marked subscription %s as invalid due to %d response", 
+		log.Printf("Marked subscription %s as invalid due to %d response",
 			subscription.ID().String(), resp.StatusCode)
 		return false, nil
 	}
@@ -210,7 +210,7 @@ func (pss *PushSenderService) ProcessRetries(ctx context.Context, maxRetries, ba
 
 	for _, job := range jobs {
 		backoffDelay := pss.calculateBackoffDelay(job.RetryCount())
-		
+
 		if time.Since(job.UpdatedAt()) < backoffDelay {
 			continue
 		}

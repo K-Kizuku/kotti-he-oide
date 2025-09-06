@@ -30,7 +30,7 @@ func NewPushEndpoint(endpoint string) (PushEndpoint, error) {
 	host := strings.ToLower(parsedURL.Host)
 	validProviders := []string{
 		"fcm.googleapis.com",
-		"android.googleapis.com", 
+		"android.googleapis.com",
 		"updates.push.services.mozilla.com",
 		"web.push.apple.com",
 	}

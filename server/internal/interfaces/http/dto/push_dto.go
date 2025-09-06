@@ -3,10 +3,10 @@ package dto
 import "time"
 
 type SubscribeRequest struct {
-	Endpoint       string            `json:"endpoint" validate:"required,url"`
-	Keys           PushKeys          `json:"keys" validate:"required"`
-	UserAgent      string            `json:"ua,omitempty"`
-	ExpirationTime *int64            `json:"expirationTime,omitempty"`
+	Endpoint       string   `json:"endpoint" validate:"required,url"`
+	Keys           PushKeys `json:"keys" validate:"required"`
+	UserAgent      string   `json:"ua,omitempty"`
+	ExpirationTime *int64   `json:"expirationTime,omitempty"`
 }
 
 type PushKeys struct {
