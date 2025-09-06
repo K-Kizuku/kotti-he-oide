@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./page.module.css";
 import { FILTERS, FilterId, applyFilter } from "./filters";
-import { NOISES, NoiseId, applyNoise } from "./noise";
+import { NOISES, createNoiseEngine, defaultNoiseConfig, type NoiseConfig } from "./noise";
 
 type StreamState = "idle" | "starting" | "running" | "stopped" | "error";
 
@@ -22,13 +22,12 @@ export default function CameraFiltersPage() {
   const [filter, setFilter] = useState<FilterId>("retro");
   const filterRef = useRef<FilterId>("retro");
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
-  // 予備の強度スライダー等は必要に応じて追加可能
-  const [noiseEnabled, setNoiseEnabled] = useState<boolean>(false);
-  const [noiseId, setNoiseId] = useState<NoiseId>("dropout");
-  const [noiseStrength, setNoiseStrength] = useState<number>(50);
+  // 複数ノイズの詳細設定
+  const [noiseConfig, setNoiseConfig] = useState<NoiseConfig>(() => defaultNoiseConfig());
 
   const filterOptions = useMemo(() => FILTERS, []);
   const noiseOptions = useMemo(() => NOISES, []);
+  const noiseEngineRef = useRef<ReturnType<typeof createNoiseEngine> | null>(null);
 
   const stopCamera = useCallback(() => {
     if (rafRef.current) {
@@ -90,6 +89,8 @@ export default function CameraFiltersPage() {
 
       setState("running");
       lastFrameRef.current = performance.now();
+      // ノイズエンジンを作成
+      noiseEngineRef.current = createNoiseEngine(noiseConfig);
 
       const loop = () => {
         const now = performance.now();
@@ -101,9 +102,8 @@ export default function CameraFiltersPage() {
           ctx.drawImage(v, 0, 0, cw, ch);
           const frame = ctx.getImageData(0, 0, cw, ch);
           applyFilter(frame, filterRef.current);
-          if (noiseEnabledRef.current) {
-            applyNoise(frame, noiseIdRef.current, noiseStrengthRef.current);
-          }
+          // 複数ノイズ適用（発生確率/持続/サイズ等はエンジンが管理）
+          noiseEngineRef.current?.step(frame);
           ctx.putImageData(frame, 0, 0);
         }
         rafRef.current = requestAnimationFrame(loop);
@@ -129,19 +129,10 @@ export default function CameraFiltersPage() {
     filterRef.current = filter;
   }, [filter]);
 
-  // ノイズ参照用の ref 群
-  const noiseEnabledRef = useRef<boolean>(false);
-  const noiseIdRef = useRef<NoiseId>("dropout");
-  const noiseStrengthRef = useRef<number>(50);
+  // ノイズ設定の変更をエンジンへ反映
   useEffect(() => {
-    noiseEnabledRef.current = noiseEnabled;
-  }, [noiseEnabled]);
-  useEffect(() => {
-    noiseIdRef.current = noiseId;
-  }, [noiseId]);
-  useEffect(() => {
-    noiseStrengthRef.current = noiseStrength;
-  }, [noiseStrength]);
+    noiseEngineRef.current?.updateConfig(noiseConfig);
+  }, [noiseConfig]);
 
   const onToggle = useCallback(() => {
     if (state === "running" || state === "starting") {
@@ -178,41 +169,97 @@ export default function CameraFiltersPage() {
             </option>
           ))}
         </select>
-        <label className={styles.checkbox} title="フィルターとは独立して適用されます">
-          <input
-            type="checkbox"
-            checked={noiseEnabled}
-            onChange={(e) => setNoiseEnabled(e.target.checked)}
-            disabled={!isRunning && !isBusy}
-          />
-          ノイズ有効
-        </label>
-        <select
-          className={styles.select}
-          value={noiseId}
-          onChange={(e) => setNoiseId(e.target.value as NoiseId)}
-          disabled={!noiseEnabled || (!isRunning && !isBusy)}
-          aria-label="ノイズ"
-        >
-          {noiseOptions.map((n) => (
-            <option key={n.id} value={n.id}>
-              {n.label}
-            </option>
-          ))}
-        </select>
-        <label className={styles.hint} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-          強度
-          <input
-            className={styles.range}
-            type="range"
-            min={0}
-            max={100}
-            value={noiseStrength}
-            onChange={(e) => setNoiseStrength(parseInt(e.target.value, 10))}
-            disabled={!noiseEnabled || (!isRunning && !isBusy)}
-          />
-          <span>{noiseStrength}</span>
-        </label>
+        <div className={styles.noisePanel} aria-label="ノイズ設定">
+          {noiseOptions.map((n) => {
+            const cfg = noiseConfig[n.id];
+            return (
+              <div key={n.id} className={styles.noiseRow} title={n.description}>
+                <label className={styles.checkbox}>
+                  <input
+                    type="checkbox"
+                    checked={cfg.enabled}
+                    onChange={(e) =>
+                      setNoiseConfig((prev) => ({
+                        ...prev,
+                        [n.id]: { ...prev[n.id], enabled: e.target.checked },
+                      }))
+                    }
+                    disabled={!isRunning && !isBusy}
+                  />
+                  {n.label}
+                </label>
+                <label className={styles.noiseCtl}>
+                  頻度
+                  <input
+                    className={styles.range}
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(cfg.frequency * 100)}
+                    onChange={(e) =>
+                      setNoiseConfig((prev) => ({
+                        ...prev,
+                        [n.id]: { ...prev[n.id], frequency: Number(e.target.value) / 100 },
+                      }))
+                    }
+                    disabled={!cfg.enabled || (!isRunning && !isBusy)}
+                  />
+                </label>
+                <label className={styles.noiseCtl}>
+                  規模
+                  <input
+                    className={styles.range}
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(cfg.magnitude * 100)}
+                    onChange={(e) =>
+                      setNoiseConfig((prev) => ({
+                        ...prev,
+                        [n.id]: { ...prev[n.id], magnitude: Number(e.target.value) / 100 },
+                      }))
+                    }
+                    disabled={!cfg.enabled || (!isRunning && !isBusy)}
+                  />
+                </label>
+                <label className={styles.noiseCtl}>
+                  持続f
+                  <input
+                    className={styles.range}
+                    type="range"
+                    min={1}
+                    max={30}
+                    value={cfg.durationFrames}
+                    onChange={(e) =>
+                      setNoiseConfig((prev) => ({
+                        ...prev,
+                        [n.id]: { ...prev[n.id], durationFrames: Number(e.target.value) },
+                      }))
+                    }
+                    disabled={!cfg.enabled || (!isRunning && !isBusy)}
+                  />
+                </label>
+                <label className={styles.noiseCtl}>
+                  サイズ
+                  <input
+                    className={styles.range}
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={Math.round(cfg.size * 100)}
+                    onChange={(e) =>
+                      setNoiseConfig((prev) => ({
+                        ...prev,
+                        [n.id]: { ...prev[n.id], size: Number(e.target.value) / 100 },
+                      }))
+                    }
+                    disabled={!cfg.enabled || (!isRunning && !isBusy)}
+                  />
+                </label>
+              </div>
+            );
+          })}
+        </div>
         <select
           className={styles.select}
           value={facingMode}

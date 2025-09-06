@@ -26,7 +26,7 @@ pnpm dev
 - ファイル:
   - `src/app/camera-filters/page.tsx` … ページ本体。カメラ起動/停止、描画ループ、UI。
   - `src/app/camera-filters/filters.ts` … フィルター群（Canvas ImageData ベース）。
-  - `src/app/camera-filters/noise.ts` … ノイズ群（フィルターとは独立して適用）。
+  - `src/app/camera-filters/noise.ts` … ノイズ群 + ノイズエンジン（複数/詳細設定/持続対応）。
   - `src/app/camera-filters/page.module.css` … デモ用スタイル。
 
 ## 実装詳細
@@ -49,7 +49,8 @@ pnpm dev
   - `loadedmetadata` 待ちで `videoWidth/Height` 取得の race を回避。
 - UI:
   - 「カメラ開始/停止」ボタン、フィルター選択。
-  - ノイズ（有効/無効、種類選択、強度スライダー）。
+  - ノイズ（複数ノイズを同時適用可能）
+    - 各ノイズごとに「有効」「頻度」「規模」「持続f（フレーム数）」「サイズ」を調整。
   - カメラ向き選択（フロント/バック、停止中のみ変更可）。
   - 元映像と処理後を 2 カラムで表示（モバイルは 1 カラム）。
 
@@ -71,7 +72,19 @@ pnpm dev
 - `applyVignette`（周辺減光）、`addScanlines`（走査線）、`adjustContrast`（コントラスト調整）、`toGray`（輝度計算）など。
 
 ### 実装済みノイズ（noise.ts）
-フィルター処理後に「別レイヤーの偶発的破損」として適用されます。各ノイズはフレームごとに発生確率と影響範囲をランダム化し、映像の一部分のみ瞬間的に乱すことを意図しています。`strength (0..100)` は発生頻度と規模をまとめて制御。
+フィルター処理後に「別レイヤーの偶発的破損」として適用されます。複数ノイズを同時に使用可能。ノイズエンジンが各タイプに対して「イベント（位置/サイズ/モード/残存フレーム）」を生成・管理し、`durationFrames` の間だけ同一領域を乱します。
+
+ノイズ共通パラメータ（`NoiseParams`）
+- `enabled` … 有効/無効
+- `frequency` … 0..1（フレーム毎の発生確率。例: 0.2 で約20%）
+- `magnitude` … 0..1（影響の強さ/振幅）
+- `durationFrames` … 1..60（持続フレーム数）
+- `size` … 0..1（帯幅/ブロック/パッチ等の幾何サイズ）
+
+推奨値の目安
+- `frequency`: 0.05〜0.3（高すぎると常時ノイズ）
+- `durationFrames`: 1〜8（ブラーや残像感不要なら 1〜3）
+- `size`: 0.1〜0.4（画面の 10〜40% 程度の帯/ブロック/パッチ）
 
 - `dropout`（ドロップアウト）
   - 細い水平ラインの白飛び/黒潰れ/近傍コピーによる欠損をランダム発生。
@@ -86,7 +99,7 @@ pnpm dev
 
 適用順序:
 1. フィルター `applyFilter(frame, filterId)`
-2. ノイズ（有効時）`applyNoise(frame, noiseId, strength)`
+2. ノイズエンジン `noiseEngine.step(frame)`（複数ノイズ・持続・確率・サイズを総合適用）
 
 ## 拡張手順（新規フィルターの追加）
 1. `filters.ts` の `FilterId` に新しい ID を追加。
@@ -112,9 +125,9 @@ export function applyYour(image: ImageData) {
 ## 拡張手順（新規ノイズの追加）
 1. `noise.ts` の `NoiseId` に ID を追加。
 2. `NOISES` 配列へ `{ id, label, description }` を追加（UI へ自動反映）。
-3. `function noiseXxx(image: ImageData, strength: number)` を実装。
-4. `applyNoise` の `switch` にケースを追加。
-5. 必要に応じて UI を調整（強度スライダーや追加パラメータ）。
+3. エンジンにイベント型を追加し、`spawn()`（初期位置/サイズ/モード生成）と `applyEvents()`（適用/TTL減算）を拡張。
+4. `defaultNoiseConfig()` にデフォルトパラメータを追加。
+5. UI（`page.tsx`）は `NOISES` に基づき自動で行が増えるため、通常変更不要（追加パラメータが必要な場合のみUIを拡張）。
 
 テンプレート例:
 ```ts
@@ -151,7 +164,7 @@ function noiseYour(image: ImageData, strength: number) {
   - メモリアロケーションの削減（`ImageData` の再利用、バッファプーリング）。
 - 機能拡張
   - フィルター強度や各種パラメータを UI スライダーで調整（彩度/コントラスト/ビネット量/閾値など）。
-  - ノイズの多重適用（複数ノイズの組み合わせ）や頻度/継続時間/領域サイズの個別パラメータ化。
+  - ノイズの多重適用（済）と、発生頻度・継続時間・領域サイズの個別パラメータ（済）。
   - 複数フィルターの同時比較グリッド表示。
   - 静止画スナップショット保存、動画録画（`MediaRecorder`）とダウンロード。
   - 自撮り用のミラー ON/OFF トグル、アスペクト比/解像度の選択肢追加。

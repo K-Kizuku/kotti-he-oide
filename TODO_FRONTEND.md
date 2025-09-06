@@ -34,23 +34,43 @@ frontend/
 │   ├── manifest.json                  # PWA マニフェスト
 │   └── icons/                         # 通知用アイコン
 ├── src/
-│   ├── app/
-│   │   ├── components/
+│   ├── app/                           # Next.js App Router
+│   │   ├── globals.css                # グローバルスタイル
+│   │   ├── layout.tsx                 # ルートレイアウト
+│   │   ├── page.tsx                   # ホームページ
+│   │   ├── notifications/             # 通知設定ページ
+│   │   │   └── page.tsx
+│   │   └── camera-filters/            # 既存のカメラフィルター
+│   │       └── page.tsx
+│   ├── components/                    # 再利用可能なコンポーネント
+│   │   ├── push/                      # Web Push関連コンポーネント
 │   │   │   ├── PushNotificationManager.tsx  # 通知管理メインコンポーネント
 │   │   │   ├── NotificationPermissionButton.tsx  # 許可要求ボタン
 │   │   │   ├── NotificationSettings.tsx     # 設定画面
 │   │   │   └── NotificationStatus.tsx       # 現在の状態表示
-│   │   ├── hooks/
-│   │   │   ├── usePushNotification.ts       # 通知管理フック
-│   │   │   ├── useNotificationPermission.ts # 許可状態管理
-│   │   │   └── useServiceWorker.ts          # SW 管理フック
-│   │   ├── utils/
-│   │   │   ├── pushApi.ts                   # サーバー API 呼び出し
-│   │   │   ├── notificationUtils.ts         # 通知ユーティリティ
-│   │   │   └── storage.ts                   # ローカルストレージ管理
-│   │   └── types/
-│   │       └── push.ts                      # Push 関連型定義
-│   └── middleware.ts                        # Next.js ミドルウェア (必要に応じて)
+│   │   └── ui/                        # 汎用UIコンポーネント
+│   │       ├── Button.tsx
+│   │       ├── Card.tsx
+│   │       └── LoadingSpinner.tsx
+│   ├── hooks/                         # カスタムフック
+│   │   ├── usePushNotification.ts     # 通知管理フック
+│   │   ├── useNotificationPermission.ts # 許可状態管理
+│   │   └── useServiceWorker.ts        # SW 管理フック
+│   ├── lib/                           # ユーティリティ・設定
+│   │   ├── api/                       # API関連
+│   │   │   ├── pushApi.ts             # サーバー API 呼び出し
+│   │   │   └── client.ts              # API クライアント設定
+│   │   ├── utils/                     # ユーティリティ関数
+│   │   │   ├── notificationUtils.ts   # 通知ユーティリティ
+│   │   │   ├── serviceWorker.ts       # SW 管理ユーティリティ
+│   │   │   └── storage.ts             # ローカルストレージ管理
+│   │   └── constants/                 # 定数定義
+│   │       └── push.ts                # Push関連定数
+│   ├── types/                         # 型定義
+│   │   ├── push.ts                    # Push 関連型定義
+│   │   ├── api.ts                     # API レスポンス型
+│   │   └── globals.d.ts               # グローバル型定義
+│   └── middleware.ts                  # Next.js ミドルウェア
 ```
 
 ## 2.2 データフロー
@@ -160,7 +180,7 @@ self.addEventListener('notificationclick', (event) => {
 ### 3.1.2 Service Worker 登録ユーティリティ
 
 ```typescript
-// src/app/utils/serviceWorker.ts
+// src/lib/utils/serviceWorker.ts
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) {
     console.warn('Service Worker not supported');
@@ -197,7 +217,7 @@ export function unregisterServiceWorker(): Promise<boolean> {
 
 ## 3.2 API 通信ユーティリティ
 
-### 3.2.1 サーバー API 呼び出し (`src/app/utils/pushApi.ts`)
+### 3.2.1 型定義ファイル (`src/types/api.ts`)
 
 ```typescript
 export interface SubscribeRequest {
@@ -222,52 +242,93 @@ export interface VAPIDResponse {
   message: string;
 }
 
-class PushAPI {
-  private baseURL: string;
+export interface UnsubscribeResponse {
+  success: boolean;
+  message: string;
+}
+```
 
-  constructor(baseURL: string = 'http://localhost:8080') {
-    this.baseURL = baseURL;
+### 3.2.2 API クライアント設定 (`src/lib/api/client.ts`)
+
+```typescript
+// サーバーのベースURL設定
+export const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? process.env.NEXT_PUBLIC_API_URL || 'https://your-api-domain.com'
+  : 'http://localhost:8080';
+
+// 共通のfetch設定
+export const apiClient = {
+  async get<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async post<T>(endpoint: string, data: any): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  },
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'DELETE',
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
   }
+};
+```
 
+### 3.2.3 Push API呼び出し関数 (`src/lib/api/pushApi.ts`)
+
+```typescript
+import { apiClient } from './client';
+import { SubscribeRequest, SubscribeResponse, VAPIDResponse, UnsubscribeResponse } from '@/types/api';
+
+export const pushAPI = {
   async getVAPIDPublicKey(): Promise<string> {
-    const response = await fetch(`${this.baseURL}/api/push/vapid-public-key`);
-    const data: VAPIDResponse = await response.json();
+    const data = await apiClient.get<VAPIDResponse>('/api/push/vapid-public-key');
     
     if (!data.success) {
       throw new Error(data.message);
     }
     
     return data.publicKey;
-  }
+  },
 
   async subscribe(subscriptionData: SubscribeRequest): Promise<SubscribeResponse> {
-    const response = await fetch(`${this.baseURL}/api/push/subscribe`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(subscriptionData),
-    });
+    return apiClient.post<SubscribeResponse>('/api/push/subscribe', subscriptionData);
+  },
 
-    const data: SubscribeResponse = await response.json();
-    return data;
+  async unsubscribe(subscriptionId: string): Promise<UnsubscribeResponse> {
+    return apiClient.delete<UnsubscribeResponse>(`/api/push/subscriptions/${subscriptionId}`);
+  },
+
+  // テスト用の通知送信（管理者用）
+  async sendTestNotification(payload: any): Promise<any> {
+    return apiClient.post('/api/push/send', { payload });
   }
-
-  async unsubscribe(subscriptionId: string): Promise<{success: boolean, message: string}> {
-    const response = await fetch(`${this.baseURL}/api/push/subscriptions/${subscriptionId}`, {
-      method: 'DELETE',
-    });
-
-    return response.json();
-  }
-}
-
-export const pushAPI = new PushAPI();
+};
 ```
 
-## 3.3 React Hooks 実装
+## 3.4 React Hooks 実装
 
-### 3.3.1 通知許可管理フック (`src/app/hooks/useNotificationPermission.ts`)
+### 3.4.1 通知許可管理フック (`src/hooks/useNotificationPermission.ts`)
 
 ```typescript
 import { useState, useEffect } from 'react';
@@ -333,12 +394,14 @@ export function useNotificationPermission() {
 }
 ```
 
-### 3.3.2 プッシュ通知管理フック (`src/app/hooks/usePushNotification.ts`)
+### 3.4.2 プッシュ通知管理フック (`src/hooks/usePushNotification.ts`)
 
 ```typescript
 import { useState, useEffect, useCallback } from 'react';
-import { pushAPI } from '../utils/pushApi';
-import { registerServiceWorker } from '../utils/serviceWorker';
+import { pushAPI } from '@/lib/api/pushApi';
+import { registerServiceWorker } from '@/lib/utils/serviceWorker';
+import { arrayBufferToBase64 } from '@/lib/utils/notificationUtils';
+import { storage } from '@/lib/utils/storage';
 
 interface PushSubscriptionState {
   isSubscribed: boolean;
@@ -370,7 +433,7 @@ export function usePushNotification() {
       }
 
       const subscription = await registration.pushManager.getSubscription();
-      const subscriptionId = subscription ? localStorage.getItem('pushSubscriptionId') : null;
+      const subscriptionId = subscription ? storage.getPushSubscriptionId() : null;
 
       setState(prev => ({
         ...prev,
@@ -420,8 +483,8 @@ export function usePushNotification() {
       const response = await pushAPI.subscribe(subscriptionData);
       
       if (response.success) {
-        // Save subscription ID to localStorage
-        localStorage.setItem('pushSubscriptionId', response.id);
+        // Save subscription ID to storage
+        storage.setPushSubscriptionId(response.id);
         
         setState(prev => ({
           ...prev,
@@ -459,8 +522,8 @@ export function usePushNotification() {
       // Notify server
       await pushAPI.unsubscribe(state.subscriptionId);
 
-      // Clear localStorage
-      localStorage.removeItem('pushSubscriptionId');
+      // Clear storage
+      storage.removePushSubscriptionId();
 
       setState(prev => ({
         ...prev,
@@ -488,29 +551,16 @@ export function usePushNotification() {
     refresh: initializePushSubscription
   };
 }
-
-// Helper function to convert ArrayBuffer to Base64
-function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  const bytes = new Uint8Array(buffer);
-  let binary = '';
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-  return btoa(binary)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, ''); // Remove padding
-}
 ```
 
-## 3.4 React コンポーネント実装
+## 3.5 React コンポーネント実装
 
-### 3.4.1 通知許可ボタン (`src/app/components/NotificationPermissionButton.tsx`)
+### 3.5.1 通知許可ボタン (`src/components/push/NotificationPermissionButton.tsx`)
 
 ```tsx
 'use client';
 
-import { useNotificationPermission } from '../hooks/useNotificationPermission';
+import { useNotificationPermission } from '@/hooks/useNotificationPermission';
 
 export default function NotificationPermissionButton() {
   const { permission, isLoading, requestPermission, isSupported, isGranted, isDenied } = useNotificationPermission();
@@ -557,13 +607,13 @@ export default function NotificationPermissionButton() {
 }
 ```
 
-### 3.4.2 プッシュ通知管理コンポーネント (`src/app/components/PushNotificationManager.tsx`)
+### 3.5.2 プッシュ通知管理コンポーネント (`src/components/push/PushNotificationManager.tsx`)
 
 ```tsx
 'use client';
 
-import { usePushNotification } from '../hooks/usePushNotification';
-import { useNotificationPermission } from '../hooks/useNotificationPermission';
+import { usePushNotification } from '@/hooks/usePushNotification';
+import { useNotificationPermission } from '@/hooks/useNotificationPermission';
 import NotificationPermissionButton from './NotificationPermissionButton';
 
 export default function PushNotificationManager() {
@@ -637,9 +687,53 @@ export default function PushNotificationManager() {
 }
 ```
 
-## 3.5 PWA 対応
+### 3.5.3 通知設定ページ (`src/app/notifications/page.tsx`)
 
-### 3.5.1 マニフェストファイル (`public/manifest.json`)
+```tsx
+'use client';
+
+import PushNotificationManager from '@/components/push/PushNotificationManager';
+import { checkWebPushSupport } from '@/lib/utils/notificationUtils';
+import { useEffect, useState } from 'react';
+
+export default function NotificationsPage() {
+  const [supportInfo, setSupportInfo] = useState<{
+    isSupported: boolean;
+    missingFeatures: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    setSupportInfo(checkWebPushSupport());
+  }, []);
+
+  if (!supportInfo) {
+    return <div>読み込み中...</div>;
+  }
+
+  if (!supportInfo.isSupported) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold mb-6">通知設定</h1>
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <p className="font-bold">お使いのブラウザは Web Push 通知をサポートしていません</p>
+          <p>不足している機能: {supportInfo.missingFeatures.join(', ')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold mb-6">通知設定</h1>
+      <PushNotificationManager />
+    </div>
+  );
+}
+```
+
+## 3.6 PWA 対応
+
+### 3.6.1 マニフェストファイル (`public/manifest.json`)
 
 ```json
 {
@@ -665,7 +759,7 @@ export default function PushNotificationManager() {
 }
 ```
 
-### 3.5.2 アイコンファイル準備
+### 3.6.2 アイコンファイル準備
 
 ```bash
 # public/icons/ に以下のファイルを配置
@@ -674,7 +768,7 @@ icon-512.png    # 512x512px の PWA アイコン
 badge-72.png    # 72x72px の通知バッジアイコン
 ```
 
-### 3.5.3 Layout への PWA メタタグ追加
+### 3.6.3 Layout への PWA メタタグ追加
 
 ```tsx
 // src/app/layout.tsx に追加
@@ -708,8 +802,8 @@ export default function RootLayout({
 ```bash
 cd frontend
 
-# 依存関係の追加（必要に応じて）
-pnpm add @types/web
+# Web Push関連の型定義を追加
+pnpm add -D @types/web
 
 # 開発サーバー起動
 pnpm dev
