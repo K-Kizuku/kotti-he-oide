@@ -58,13 +58,17 @@ export function usePushNotification() {
         throw new Error('Service Worker not registered');
       }
 
-      // Convert VAPID key to the proper format
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+      // VAPID 公開鍵を PushManager.subscribe が期待する BufferSource（ArrayBuffer）へ変換
+      // TypeScript 5.6 以降の lib.dom 型では Uint8Array<ArrayBufferLike> が
+      // そのまま BufferSource として推論されないケースがあるため、
+      // 明示的に ArrayBuffer を渡す（実体は通常の ArrayBuffer）。
+      const applicationServerKeyArray = urlBase64ToUint8Array(vapidPublicKey);
 
       // Subscribe to push manager
       const subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: applicationServerKey
+        // ArrayBuffer を渡すことで BufferSource 型に適合させる
+        applicationServerKey: applicationServerKeyArray.buffer as ArrayBuffer
       });
 
       // Send subscription to server

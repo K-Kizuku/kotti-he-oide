@@ -31,20 +31,25 @@ export interface WebPushSupportInfo {
   missingFeatures: string[];
 }
 
-export interface NotificationOptions {
+// Service Worker 用の通知オプション（DOM の NotificationOptions とは別名にして衝突を避ける）
+export interface SWNotificationOptions {
   body?: string;
   icon?: string;
   badge?: string;
   tag?: string;
   data?: Record<string, unknown>;
-  actions?: NotificationAction[];
+  actions?: Array<{
+    action: string;
+    title: string;
+    icon?: string;
+  }>;
   requireInteraction?: boolean;
   silent?: boolean;
   timestamp?: number;
 }
 
 export interface ServiceWorkerRegistration extends globalThis.ServiceWorkerRegistration {
-  showNotification(title: string, options?: NotificationOptions): Promise<void>;
+  showNotification(title: string, options?: SWNotificationOptions): Promise<void>;
 }
 
 declare global {
