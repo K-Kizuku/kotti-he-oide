@@ -18,8 +18,9 @@ resource "aws_s3_bucket_public_access_block" "assets" {
 }
 
 resource "aws_s3_bucket_acl" "assets" {
-  bucket = aws_s3_bucket.assets.id
-  acl    = "public-read"
+  depends_on = [aws_s3_bucket_public_access_block.assets]
+  bucket     = aws_s3_bucket.assets.id
+  acl        = "public-read"
 }
 
 resource "aws_s3_bucket_website_configuration" "assets" {
@@ -30,7 +31,8 @@ resource "aws_s3_bucket_website_configuration" "assets" {
 }
 
 resource "aws_s3_bucket_policy" "assets" {
-  bucket = aws_s3_bucket.assets.id
+  depends_on = [aws_s3_bucket_public_access_block.assets]
+  bucket     = aws_s3_bucket.assets.id
 
   policy = jsonencode({
     Version = "2012-10-17"
