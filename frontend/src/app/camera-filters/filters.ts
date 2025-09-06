@@ -9,7 +9,8 @@ export type FilterId =
   | "horror"
   | "serious"
   | "vhs"
-  | "comic";
+  | "comic"
+  | "vignette"; // 追加: ビネット（周辺減光）のみ
 
 export type FilterSpec = {
   id: FilterId;
@@ -23,6 +24,7 @@ export const FILTERS: FilterSpec[] = [
   { id: "serious", label: "シリアス（ノワール調）", description: "低彩度 + 強コントラスト + 軽いビネット" },
   { id: "vhs", label: "VHS/グリッチ（色ずれ/走査線）", description: "色チャンネルのずれ + 走査線" },
   { id: "comic", label: "コミック（ポスタライズ/輪郭）", description: "色段階化 + Sobel輪郭" },
+  { id: "vignette", label: "ビネット（周辺減光のみ）", description: "映像の周辺を暗く落として被写体を強調" },
 ];
 
 const clampByte = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v) | 0;
@@ -47,6 +49,13 @@ function applyVignette(data: Uint8ClampedArray, w: number, h: number, strength =
       data[i + 2] = clampByte(data[i + 2] * v);
     }
   }
+}
+
+// ビネットのみ適用するシンプルなフィルター
+export function applyVignetteOnly(image: ImageData) {
+  const { data, width: w, height: h } = image;
+  // 既存ヘルパーを利用。デフォルトより少し強めにして効果を明確化。
+  applyVignette(data, w, h, 0.5);
 }
 
 function addScanlines(data: Uint8ClampedArray, w: number, h: number, darkness = 0.12) {
@@ -236,8 +245,9 @@ export function applyFilter(image: ImageData, id: FilterId) {
       return applyVhs(image);
     case "comic":
       return applyComic(image);
+    case "vignette":
+      return applyVignetteOnly(image);
     default:
       return;
   }
 }
-
