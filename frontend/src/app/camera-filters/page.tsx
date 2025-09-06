@@ -109,10 +109,12 @@ export default function CameraFiltersPage() {
         rafRef.current = requestAnimationFrame(loop);
       };
       rafRef.current = requestAnimationFrame(loop);
-    } catch (e: any) {
-      console.error(e);
+    } catch (e: unknown) {
+      // 例外を安全にメッセージへ変換
+      const message = e instanceof Error ? e.message : String(e);
+      // ネイティブの例外メッセージが空の場合にフォールバック
       setError(
-        e?.message ||
+        message ||
           "カメラの起動に失敗しました。ブラウザの権限設定をご確認ください。"
       );
       setState("error");
@@ -263,7 +265,9 @@ export default function CameraFiltersPage() {
         <select
           className={styles.select}
           value={facingMode}
-          onChange={(e) => setFacingMode(e.target.value as any)}
+          onChange={(e) =>
+            setFacingMode(e.target.value as "user" | "environment")
+          }
           disabled={isRunning || isBusy}
           aria-label="カメラ"
         >
@@ -282,7 +286,13 @@ export default function CameraFiltersPage() {
         <section className={styles.panel}>
           <div className={styles.title}>元映像（カメラ）</div>
           <div className={styles.mediaWrap}>
-            <video ref={videoRef} className={styles.video} playsInline muted />
+            <video
+              ref={videoRef}
+              className={styles.video}
+              playsInline
+              muted
+              aria-hidden="true"
+            />
           </div>
           <div className={styles.hint}>許可ダイアログが表示されたら「許可」を押してください。</div>
         </section>
@@ -290,7 +300,12 @@ export default function CameraFiltersPage() {
         <section className={styles.panel}>
           <div className={styles.title}>フィルター適用後（{filterOptions.find((f) => f.id === filter)?.label}）</div>
           <div className={styles.mediaWrap}>
-            <canvas ref={canvasRef} className={styles.canvas} />
+            <canvas
+              ref={canvasRef}
+              className={styles.canvas}
+              role="img"
+              aria-label="フィルター適用後の出力"
+            />
           </div>
           <div className={styles.hint}>
             目安: 最大幅 {MAX_WIDTH}px / {TARGET_FPS}fps（環境により変動）
