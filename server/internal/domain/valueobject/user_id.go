@@ -1,6 +1,9 @@
 package valueobject
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 type UserID struct {
 	value int
@@ -13,12 +16,20 @@ func NewUserID(value int) (UserID, error) {
 	return UserID{value: value}, nil
 }
 
+func UserIDFromString(s string) (UserID, error) {
+	value, err := strconv.Atoi(s)
+	if err != nil {
+		return UserID{}, fmt.Errorf("invalid user ID format: %w", err)
+	}
+	return NewUserID(value)
+}
+
 func (u UserID) Value() int {
 	return u.value
 }
 
 func (u UserID) String() string {
-	return fmt.Sprintf("UserID(%d)", u.value)
+	return strconv.Itoa(u.value)
 }
 
 func (u UserID) Equals(other UserID) bool {
