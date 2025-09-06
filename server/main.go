@@ -69,7 +69,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Health check
-	mux.HandleFunc("GET /health", healthHandler.HealthCheck)
+	mux.HandleFunc("GET /api/healthz", healthHandler.HealthCheck)
 
 	// User API
 	mux.HandleFunc("GET /api/users", userHandler.GetUsers)
