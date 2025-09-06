@@ -1,0 +1,52 @@
+variable "region" {
+  type    = string
+  default = "ap-northeast-1"
+}
+
+variable "name_prefix" {
+  type    = string
+  default = "poc"
+}
+
+variable "db_name" {
+  type    = string
+  default = "appdb"
+}
+
+variable "db_username" {
+  type    = string
+  default = "app"
+}
+
+variable "db_password" {
+  type      = string
+  sensitive = true
+}
+
+variable "api_container_port" {
+  type    = number
+  default = 8080
+}
+
+variable "web_container_port" {
+  type    = number
+  default = 3000
+}
+
+variable "api_container_image" {
+  type    = string
+  default = "api:latest"
+}
+
+variable "web_container_image" {
+  type    = string
+  default = "web:latest"
+}
+
+locals {
+  tags = {
+    Project     = var.name_prefix
+    Owner       = "dev"
+    Environment = "dev"
+  }
+}
