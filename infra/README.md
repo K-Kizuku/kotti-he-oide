@@ -45,9 +45,53 @@
 
 4. **動作確認**
 
-   出力された `alb_dns_name` にブラウザでアクセスして動作を確認します。
+出力された `alb_dns_name` にブラウザでアクセスして動作を確認します。
    - `/` : WEB サービス
    - `/api/healthz` : API サービス
+
+## カスタムドメイン + HTTPS（Cloudflare）
+
+このリポジトリは、単一のALB上で `/${api}` パスをAPI、`/` をWEBに振り分けます。Cloudflareで管理しているドメインからサブドメイン（例: `kotti.kizuku-hackathon.work`）でHTTPSアクセスさせる手順は以下です。
+
+1. `terraform.tfvars` にサブドメインを設定
+
+   ```hcl
+   custom_domain_name = "kotti.kizuku-hackathon.work"
+   ```
+
+2. ACM証明書を作成（検証用レコードを取得）
+
+   ```bash
+   # 先に証明書のみ作成して検証値を取得
+   terraform apply -target=aws_acm_certificate.this
+   terraform output -json acm_validation_records
+   ```
+
+3. CloudflareでACM検証レコードを追加（DNS Validation）
+
+   - 出力された `acm_validation_records` の各要素 `{ name, type, value }` に従って、Cloudflareの対象ゾーンにDNSレコードを追加します。
+   - 種別はほぼ `CNAME` です。複数出る場合はすべて追加してください。
+
+4. 証明書の検証完了とALB HTTPSの作成
+
+   ```bash
+   terraform apply
+   ```
+
+   - これにより ALB の 443 リスナー（証明書つき）と 80→443 リダイレクトが構成されます。
+
+5. Cloudflareで配信用のCNAMEを作成
+
+   - レコード: `kotti`（= `kotti.kizuku-hackathon.work`）
+   - 種別: `CNAME`
+   - 値: Terraform出力の `alb_dns_name`（例: `poc-alb-xxxxxxxx.ap-northeast-1.elb.amazonaws.com`）
+   - プロキシ: 有効（オレンジ雲）推奨
+   - SSL/TLS 暗号化モード: 「フル（厳格）」推奨
+
+6. 動作確認
+
+   - `https://kotti.kizuku-hackathon.work/` でWEB
+   - `https://kotti.kizuku-hackathon.work/api/healthz` でAPI
 
 ## コスト注意点
 

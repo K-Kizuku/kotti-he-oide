@@ -53,6 +53,6 @@ resource "aws_ecs_service" "web" {
     container_port   = var.web_container_port
   }
 
-  depends_on = [aws_lb_listener.http]
+  depends_on = [aws_lb_listener.https]
   tags       = local.tags
 }

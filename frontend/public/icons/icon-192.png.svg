@@ -1,0 +1,9 @@
+
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" fill="#4F46E5" rx="19.200000000000003"/>
+  <circle cx="96" cy="64" r="28.799999999999997" fill="white"/>
+  <path d="M 57.599999999999994 115.19999999999999 Q 96 153.60000000000002 134.39999999999998 115.19999999999999" 
+        stroke="white" stroke-width="9.600000000000001" fill="none" stroke-linecap="round"/>
+  <text x="96" y="172.8" font-family="Arial, sans-serif" 
+        font-size="19.200000000000003" fill="white" text-anchor="middle">PWA</text>
+</svg>

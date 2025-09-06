@@ -50,3 +50,8 @@ locals {
     Environment = "dev"
   }
 }
+
+variable "custom_domain_name" {
+  description = "Cloudflareで管理しているカスタムドメイン(サブドメイン含む)。例: kotti.kizuku-hackathon.work"
+  type        = string
+}
