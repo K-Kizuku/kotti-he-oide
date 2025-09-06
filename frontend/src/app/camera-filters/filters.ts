@@ -68,9 +68,9 @@ export function applyRetro(image: ImageData) {
     const r = data[i];
     const g = data[i + 1];
     const b = data[i + 2];
-    let nr = 0.393 * r + 0.769 * g + 0.189 * b;
-    let ng = 0.349 * r + 0.686 * g + 0.168 * b;
-    let nb = 0.272 * r + 0.534 * g + 0.131 * b;
+    const nr = 0.393 * r + 0.769 * g + 0.189 * b;
+    const ng = 0.349 * r + 0.686 * g + 0.168 * b;
+    const nb = 0.272 * r + 0.534 * g + 0.131 * b;
     // 粒子（ランダム微小ノイズ）
     const n = (Math.random() - 0.5) * 18; // ±9程度
     data[i] = clampByte(nr + n);
@@ -82,7 +82,7 @@ export function applyRetro(image: ImageData) {
 }
 
 export function applyHorror(image: ImageData) {
-  const { data, width: w, height: h } = image;
+  const { data } = image;
   // 低彩度 + 強コントラスト + 緑被り + シャドウノイズ
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];

@@ -119,7 +119,7 @@ export default function CameraFiltersPage() {
       );
       setState("error");
     }
-  }, [facingMode]);
+  }, [facingMode, noiseConfig]);
 
   const onChangeFilter = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value as FilterId;
