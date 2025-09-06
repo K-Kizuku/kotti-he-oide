@@ -16,18 +16,31 @@
 ## インフラストラクチャ (AWS)
 - **コンテナオーケストレーション**: ECS Fargate
 - **ロードバランサー**: Application Load Balancer (ALB)
-- **データベース**: RDS PostgreSQL
+- **データベース**: RDS PostgreSQL（Web Push用スキーマ含む）
 - **コンテナレジストリ**: Elastic Container Registry (ECR)
 - **ストレージ**: S3
 - **ネットワーク**: VPC、パブリック/プライベートサブネット
 - **IaC**: Terraform ~> 5.0
 - **ログ**: CloudWatch Logs
+- **CI/CD**: GitHub Actions（ECR/ECS自動デプロイ）
 
 ## 開発ツール
 - **リンティング**: Next.js設定でのESLint
 - **コードフォーマット**: バックエンド用Go fmt
 - **オプションツール**: air (Goホットリロード用), golangci-lint (Goリンティング用)
-- **コンテナ**: Docker（ECRへのイメージプッシュ用）
+- **コンテナ**: Docker（マルチステージビルド対応）
+- **MCP**: Model Context Protocol設定（context7サーバー）
+
+## 主要ライブラリ
+### バックエンド
+- **Web Push**: `github.com/SherClockHolmes/webpush-go` v1.4.0
+- **JWT**: `github.com/golang-jwt/jwt/v5` v5.2.1
+- **PostgreSQL**: `github.com/jackc/pgx/v5` v5.7.5
+- **DI**: `github.com/google/wire` v0.7.0
+
+### フロントエンド
+- **カメラ処理**: Canvas 2D API、getUserMedia
+- **画像フィルター**: 自作ImageData処理（Sobel、ポスタライズ等）
 
 ## よく使用するコマンド
 
@@ -70,6 +83,15 @@ aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS
 docker build -t api:latest ./server
 docker tag api:latest <ACCOUNT_ID>.dkr.ecr.ap-northeast-1.amazonaws.com/api:latest
 docker push <ACCOUNT_ID>.dkr.ecr.ap-northeast-1.amazonaws.com/api:latest
+```
+
+### CI/CD（GitHub Actions）
+```bash
+# 自動デプロイトリガー
+git push origin main  # mainブランチへのpushで自動デプロイ
+
+# フロントエンド: frontend/**の変更でfrontend-deploy.ymlが実行
+# バックエンド: server/**の変更でserver-deploy.ymlが実行
 ```
 
 ## デフォルトポート

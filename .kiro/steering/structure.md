@@ -6,10 +6,14 @@
 ├── frontend/          # Next.js Reactアプリケーション
 ├── server/           # Go バックエンドAPIサーバー
 ├── infra/            # AWS Terraformインフラストラクチャ設定
+├── .github/          # GitHub Actions CI/CDワークフロー
 ├── .kiro/            # Kiro AIアシスタント設定
 ├── .claude/          # Claude設定
 ├── .vscode/          # VSCode設定
+├── .mcp.json         # Model Context Protocol設定
+├── AGENTS.md         # エージェント向けガイドライン
 ├── CLAUDE.md         # Claude向けプロジェクト説明
+├── TODO.md           # Web Push機能仕様書
 └── README.md         # プロジェクト説明
 ```
 
@@ -21,7 +25,11 @@ Go バックエンドは**ドメイン駆動設計（DDD）**を用いた**レ�
 server/
 ├── main.go                    # アプリケーションエントリーポイント
 ├── go.mod                     # Goモジュール定義
+├── go.sum                     # 依存関係チェックサム
 ├── Makefile                   # ビルドと開発コマンド
+├── Dockerfile                 # コンテナビルド定義
+├── schema.sql                 # PostgreSQL用データベーススキーマ
+├── bin/                       # ビルド成果物
 ├── cmd/server/                # コマンドラインインターフェース
 ├── internal/
 │   ├── interfaces/            # インターフェース層（外部インターフェース層）
@@ -75,12 +83,21 @@ infra/
 ```
 frontend/
 ├── src/app/                  # App Routerページとレイアウト
+│   ├── camera-filters/      # カメラフィルター機能
+│   │   ├── page.tsx         # カメラフィルターページ
+│   │   ├── page.module.css  # フィルター専用スタイル
+│   │   └── filters.ts       # 画像フィルター実装
 │   ├── layout.tsx           # ルートレイアウト
 │   ├── page.tsx             # ホームページ
 │   ├── globals.css          # グローバルスタイル
 │   └── page.module.css      # ページ固有スタイル
 ├── public/                   # 静的アセット
+├── .next/                    # Next.jsビルド成果物
+├── node_modules/             # 依存関係
+├── Dockerfile                # コンテナビルド定義
+├── CAMERA_memo.md            # カメラ機能実装メモ
 ├── package.json             # 依存関係とスクリプト
+├── pnpm-lock.yaml           # パッケージロックファイル
 ├── tsconfig.json            # TypeScript設定
 ├── next.config.ts           # Next.js設定
 └── eslint.config.mjs        # ESLint設定
@@ -118,9 +135,22 @@ frontend/
 - カスタムドメインエラー型を通じてエラーを処理
 - 疎結合のために依存性注入を使用
 
+## CI/CD構造 (.github/workflows/)
+
+GitHub Actionsによる自動デプロイメント：
+
+```
+.github/workflows/
+├── frontend-deploy.yml       # フロントエンドデプロイ（frontend/**変更時）
+└── server-deploy.yml         # バックエンドデプロイ（server/**変更時）
+```
+
 ### 現在の実装状況
 
 - レイヤードアーキテクチャ + DDD の完全実装済み
-- ユーザー管理はインメモリストレージで実装（本格的な DB 対応準備中）
-- AWS ECS Fargate での本番環境デプロイメント対応済み
+- PostgreSQLデータベース対応（Web Push用スキーマ含む）
+- Dockerコンテナ化とCI/CD自動デプロイ完備
+- AWS ECS Fargate での本番環境運用中
 - Terraform によるインフラストラクチャ as Code 実装済み
+- Web Push通知システム（RFC準拠、VAPID対応）
+- カメラフィルター機能（リアルタイム画像処理）

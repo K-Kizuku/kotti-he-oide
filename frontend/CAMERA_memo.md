@@ -26,6 +26,7 @@ pnpm dev
 - ファイル:
   - `src/app/camera-filters/page.tsx` … ページ本体。カメラ起動/停止、描画ループ、UI。
   - `src/app/camera-filters/filters.ts` … フィルター群（Canvas ImageData ベース）。
+  - `src/app/camera-filters/noise.ts` … ノイズ群（フィルターとは独立して適用）。
   - `src/app/camera-filters/page.module.css` … デモ用スタイル。
 
 ## 実装詳細
@@ -47,7 +48,9 @@ pnpm dev
   - `MediaStreamTrack.stop()` でカメラ停止。
   - `loadedmetadata` 待ちで `videoWidth/Height` 取得の race を回避。
 - UI:
-  - 「カメラ開始/停止」ボタン、フィルター選択、カメラ向き選択。
+  - 「カメラ開始/停止」ボタン、フィルター選択。
+  - ノイズ（有効/無効、種類選択、強度スライダー）。
+  - カメラ向き選択（フロント/バック、停止中のみ変更可）。
   - 元映像と処理後を 2 カラムで表示（モバイルは 1 カラム）。
 
 ### 実装済みフィルター（filters.ts）
@@ -67,6 +70,24 @@ pnpm dev
 補助処理:
 - `applyVignette`（周辺減光）、`addScanlines`（走査線）、`adjustContrast`（コントラスト調整）、`toGray`（輝度計算）など。
 
+### 実装済みノイズ（noise.ts）
+フィルター処理後に「別レイヤーの偶発的破損」として適用されます。各ノイズはフレームごとに発生確率と影響範囲をランダム化し、映像の一部分のみ瞬間的に乱すことを意図しています。`strength (0..100)` は発生頻度と規模をまとめて制御。
+
+- `dropout`（ドロップアウト）
+  - 細い水平ラインの白飛び/黒潰れ/近傍コピーによる欠損をランダム発生。
+- `block`（ブロック欠損/ずれ）
+  - 矩形ブロックを別位置からコピーして欠損/ずれを表現。
+- `tear`（ティア）
+  - 水平帯域が横方向に波打つ/ずれる時間軸エラー風の乱れ。
+- `snow`（スノーノイズ）
+  - 局所矩形パッチを白黒ランダム値で砂嵐化。
+- `headswitch`（ヘッドスイッチング）
+  - 下端にカラーストライプと乱れを周期的に発生（VHS 的）。
+
+適用順序:
+1. フィルター `applyFilter(frame, filterId)`
+2. ノイズ（有効時）`applyNoise(frame, noiseId, strength)`
+
 ## 拡張手順（新規フィルターの追加）
 1. `filters.ts` の `FilterId` に新しい ID を追加。
 2. `FILTERS` 配列へ `{ id, label, description }` を追加（UI へ自動反映）。
@@ -85,6 +106,24 @@ export function applyYour(image: ImageData) {
     // ここに画素処理
     data[i] = r; data[i+1] = g; data[i+2] = b;
   }
+}
+```
+
+## 拡張手順（新規ノイズの追加）
+1. `noise.ts` の `NoiseId` に ID を追加。
+2. `NOISES` 配列へ `{ id, label, description }` を追加（UI へ自動反映）。
+3. `function noiseXxx(image: ImageData, strength: number)` を実装。
+4. `applyNoise` の `switch` にケースを追加。
+5. 必要に応じて UI を調整（強度スライダーや追加パラメータ）。
+
+テンプレート例:
+```ts
+export type NoiseId = "dropout" | "block" | "tear" | "snow" | "headswitch" | "your";
+function noiseYour(image: ImageData, strength: number) {
+  const { data, width: w, height: h } = image;
+  // strength は 0..100、頻度/規模に利用
+  // 例: if (Math.random() > strength/100) return; // 発生確率
+  // 部分領域だけを処理するのがポイント
 }
 ```
 
@@ -112,6 +151,7 @@ export function applyYour(image: ImageData) {
   - メモリアロケーションの削減（`ImageData` の再利用、バッファプーリング）。
 - 機能拡張
   - フィルター強度や各種パラメータを UI スライダーで調整（彩度/コントラスト/ビネット量/閾値など）。
+  - ノイズの多重適用（複数ノイズの組み合わせ）や頻度/継続時間/領域サイズの個別パラメータ化。
   - 複数フィルターの同時比較グリッド表示。
   - 静止画スナップショット保存、動画録画（`MediaRecorder`）とダウンロード。
   - 自撮り用のミラー ON/OFF トグル、アスペクト比/解像度の選択肢追加。

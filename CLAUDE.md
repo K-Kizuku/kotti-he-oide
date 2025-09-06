@@ -7,10 +7,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 This is a full-stack hackathon project with three main components:
 
 - **Frontend**: Next.js 15.5.2 React application using TypeScript and Turbopack
-- **Server**: Go REST API backend following Layered Architecture + DDD principles
-- **Infra**: Infrastructure/deployment configuration
+- **Server**: Go REST API backend following Layered Architecture + DDD principles  
+- **Infra**: AWS ECS Fargate infrastructure with Terraform IaC
 
 The frontend uses Next.js App Router with TypeScript paths configured (`@/*` maps to `./src/*`).
+
+## New Features
+
+### Web Push Notification System
+- RFC 8030/8291/8292 compliant Web Push implementation
+- VAPID authentication and message encryption
+- PostgreSQL-based subscription management, job queue, and logging
+- Asynchronous sending workers with retry mechanisms
+
+### Camera Filter Feature
+- Real-time browser camera video processing
+- 5 filter types (retro/horror/serious/VHS/comic)
+- Canvas 2D API-based high-speed pixel processing
+- Front/back camera switching support
 
 ## Backend Architecture (DDD + Layered)
 
@@ -89,6 +103,18 @@ terraform destroy    # Destroy infrastructure resources
 - `GET /api/users/{id}` - Get user by ID
 - `DELETE /api/users/{id}` - Delete user
 
+### Web Push API Endpoints (Planned)
+- `POST /api/push/subscribe` - Register push subscription
+- `DELETE /api/push/subscriptions/{id}` - Unsubscribe
+- `GET /api/push/vapid-public-key` - Get VAPID public key
+- `POST /api/push/send` - Send notification (admin)
+- `POST /api/push/send/batch` - Batch send notifications
+- `POST /api/push/click` - Track notification clicks
+
+### Frontend Routes
+- `/` - Home page
+- `/camera-filters` - Camera filter demo page
+
 ## Infrastructure Architecture
 
 The infrastructure is deployed on AWS using Terraform and follows a containerized approach with ECS Fargate:
@@ -136,6 +162,20 @@ infra/
 - **Infrastructure**: AWS ECS Fargate, ALB, RDS PostgreSQL, ECR, S3, Terraform ~> 5.0
 - **Package Manager**: pnpm (frontend)
 - **Build Tool**: Turbopack (Next.js)
+- **CI/CD**: GitHub Actions (ECR/ECS auto-deployment)
+- **Containerization**: Docker (multi-stage builds)
+
+## Key Libraries
+
+### Backend
+- **Web Push**: `github.com/SherClockHolmes/webpush-go` v1.4.0
+- **JWT**: `github.com/golang-jwt/jwt/v5` v5.2.1  
+- **PostgreSQL**: `github.com/jackc/pgx/v5` v5.7.5
+- **DI**: `github.com/google/wire` v0.7.0
+
+### Frontend
+- **Camera Processing**: Canvas 2D API, getUserMedia
+- **Image Filters**: Custom ImageData processing (Sobel, posterization, etc.)
 
 ## Development Guidelines
 
@@ -144,3 +184,23 @@ infra/
 - Implement repository pattern for data access abstraction
 - Handle errors through custom domain error types
 - Use dependency injection for loose coupling
+- All communication should be in Japanese (日本語)
+- Code comments should be in Japanese when possible
+- Variable/function names can be in English, but documentation should be in Japanese
+
+## Database Schema
+
+The project includes a comprehensive PostgreSQL schema (`server/schema.sql`) for:
+- User management
+- Web Push subscriptions with VAPID support
+- Notification templates and user preferences
+- Asynchronous job queue for push notifications
+- Delivery logs and analytics
+
+## CI/CD Pipeline
+
+- **Trigger**: Push to `main` branch
+- **Frontend**: Builds and deploys when `frontend/**` changes
+- **Backend**: Builds and deploys when `server/**` changes
+- **Process**: Docker build → ECR push → ECS service update
+- **Requirements**: AWS credentials in GitHub Secrets
