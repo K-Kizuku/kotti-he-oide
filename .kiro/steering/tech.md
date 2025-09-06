@@ -13,10 +13,21 @@
 - **パッケージマネージャー**: pnpm (pnpm-lock.yamlに基づく)
 - **ビルドツール**: Turbopack (--turbopackフラグを使用)
 
+## インフラストラクチャ (AWS)
+- **コンテナオーケストレーション**: ECS Fargate
+- **ロードバランサー**: Application Load Balancer (ALB)
+- **データベース**: RDS PostgreSQL
+- **コンテナレジストリ**: Elastic Container Registry (ECR)
+- **ストレージ**: S3
+- **ネットワーク**: VPC、パブリック/プライベートサブネット
+- **IaC**: Terraform ~> 5.0
+- **ログ**: CloudWatch Logs
+
 ## 開発ツール
 - **リンティング**: Next.js設定でのESLint
 - **コードフォーマット**: バックエンド用Go fmt
 - **オプションツール**: air (Goホットリロード用), golangci-lint (Goリンティング用)
+- **コンテナ**: Docker（ECRへのイメージプッシュ用）
 
 ## よく使用するコマンド
 
@@ -46,6 +57,22 @@ pnpm start        # 本番サーバーを開始
 pnpm lint         # ESLintを実行
 ```
 
+### インフラストラクチャ (infra/)
+```bash
+# Terraform操作
+terraform init      # Terraformを初期化
+terraform plan      # インフラストラクチャ変更をプレビュー
+terraform apply     # インフラストラクチャ変更を適用
+terraform destroy   # インフラストラクチャリソースを削除
+
+# ECRへのイメージプッシュ（例：東京リージョン）
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin <ACCOUNT_ID>.dkr.ecr.ap-northeast-1.amazonaws.com
+docker build -t api:latest ./server
+docker tag api:latest <ACCOUNT_ID>.dkr.ecr.ap-northeast-1.amazonaws.com/api:latest
+docker push <ACCOUNT_ID>.dkr.ecr.ap-northeast-1.amazonaws.com/api:latest
+```
+
 ## デフォルトポート
 - バックエンド: 8080 (PORT環境変数で設定可能)
 - フロントエンド: 3000 (Next.jsデフォルト)
+- ALB: 80/443 (HTTP/HTTPS)

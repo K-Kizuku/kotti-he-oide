@@ -4,21 +4,30 @@
 ```
 ├── frontend/          # Next.js Reactアプリケーション
 ├── server/           # Go バックエンドAPIサーバー
-├── infra/            # インフラストラクチャ設定
-└── .kiro/            # Kiro AIアシスタント設定
+├── infra/            # AWS Terraformインフラストラクチャ設定
+├── .kiro/            # Kiro AIアシスタント設定
+├── .claude/          # Claude設定
+├── .vscode/          # VSCode設定
+├── CLAUDE.md         # Claude向けプロジェクト説明
+└── README.md         # プロジェクト説明
 ```
 
 ## バックエンド構造 (server/)
 
-Goバックエンドは**ドメイン駆動設計（DDD）**を用いた**クリーンアーキテクチャ**に従っています：
+Goバックエンドは**ドメイン駆動設計（DDD）**を用いた**レイヤードアーキテクチャ**に従っています：
 
 ```
 server/
 ├── main.go                    # アプリケーションエントリーポイント
 ├── go.mod                     # Goモジュール定義
 ├── Makefile                   # ビルドと開発コマンド
-├── cmd/server/                # コマンドラインインターフェース（空）
+├── cmd/server/                # コマンドラインインターフェース
 ├── internal/
+│   ├── interfaces/            # インターフェース層（外部インターフェース層）
+│   │   └── http/
+│   │       ├── handler/       # HTTPハンドラー
+│   │       ├── dto/           # データ転送オブジェクト
+│   │       └── middleware/    # HTTPミドルウェア
 │   ├── application/           # アプリケーション層
 │   │   ├── service/          # アプリケーションサービス
 │   │   └── usecase/          # ユースケース/インタラクター
@@ -27,20 +36,35 @@ server/
 │   │   ├── repository/       # リポジトリインターフェース
 │   │   ├── service/          # ドメインサービス
 │   │   └── valueobject/      # 値オブジェクト（Email、UserID）
-│   ├── handler/              # HTTPハンドラー（現在の実装）
-│   ├── infrastructure/       # インフラストラクチャ層
-│   │   ├── config/           # 設定
-│   │   └── persistence/      # データベース実装
-│   ├── interfaces/           # インターフェースアダプター
-│   │   ├── http/             # HTTPインターフェース層
-│   │   │   ├── dto/          # データ転送オブジェクト
-│   │   │   ├── handler/      # HTTPハンドラー
-│   │   │   └── middleware/   # HTTPミドルウェア
-│   │   └── repository/       # リポジトリ実装
-│   ├── model/                # データモデル（User、リクエスト）
-│   └── service/              # サービス
+│   └── infrastructure/       # インフラストラクチャ層
+│       ├── config/           # 設定
+│       └── persistence/      # データベース実装
 └── pkg/                      # 共有パッケージ
     └── errors/               # エラーハンドリングユーティリティ
+```
+
+## インフラストラクチャ構造 (infra/)
+
+AWS Terraformによるインフラストラクチャ定義：
+
+```
+infra/
+├── alb.tf                  # Application Load Balancer設定
+├── ecr.tf                  # Elastic Container Registry
+├── ecs_cluster.tf          # ECSクラスター設定
+├── ecs_services_api.tf     # APIサービス設定
+├── ecs_services_web.tf     # Webサービス設定
+├── outputs.tf              # Terraform出力値
+├── providers.tf            # AWSとRandomプロバイダー
+├── rds.tf                  # RDS PostgreSQLデータベース
+├── s3.tf                   # S3バケット設定
+├── security.tf             # セキュリティグループとIAMロール
+├── variables.tf            # 入力変数
+├── versions.tf             # Terraformバージョン制約
+├── vpc.tf                  # VPCとネットワーキング
+├── terraform.tfvars        # 変数値（機密情報含む）
+├── terraform.tfstate       # Terraform状態ファイル
+└── README.md               # インフラストラクチャ説明
 ```
 
 ## フロントエンド構造 (frontend/)
@@ -75,8 +99,23 @@ frontend/
 - **パッケージ**: 小文字、可能な限り単語1つ
 - **React**: コンポーネントはPascalCase、関数/変数はcamelCase
 
-### 現在の実装に関する注意事項
-- ユーザー管理は現在インメモリストレージで実装されています
-- HTTPハンドラーは `/internal/handler/` にあります（移行期の構造）
-- ドメインモデルは `/internal/domain/model/`（DDD）と `/internal/model/`（シンプル）の両方に存在します
-- クリーンアーキテクチャ層は部分的に実装されています
+## 依存関係フロー
+
+レイヤードアーキテクチャの依存関係：
+- **Interfaces** → **Application** → **Domain** ← **Infrastructure**
+- 依存関係は内側に向かう（クリーンアーキテクチャ）
+- InfrastructureはDomainインターフェースを実装
+
+## 開発ガイドライン
+
+- DDDの原則に従う：ビジネスロジックはドメイン層に配置
+- 値オブジェクトを使用してプリミティブ型の検証を行う（UserID、Email）
+- データアクセスの抽象化にはリポジトリパターンを実装
+- カスタムドメインエラー型を通じてエラーを処理
+- 疎結合のために依存性注入を使用
+
+### 現在の実装状況
+- レイヤードアーキテクチャ + DDDの完全実装済み
+- ユーザー管理はインメモリストレージで実装（本格的なDB対応準備中）
+- AWS ECS Fargateでの本番環境デプロイメント対応済み
+- Terraformによるインフラストラクチャ as Code実装済み

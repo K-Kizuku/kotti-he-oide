@@ -71,6 +71,17 @@ make fmt          # Format code
 
 The server runs on http://localhost:8080 by default.
 
+### Infrastructure Development
+All infrastructure commands should be run from the `infra/` directory:
+
+```bash
+cd infra
+terraform init      # Initialize Terraform
+terraform plan       # Preview infrastructure changes
+terraform apply      # Apply infrastructure changes
+terraform destroy    # Destroy infrastructure resources
+```
+
 ### API Endpoints
 - `GET /health` - Health check
 - `GET /api/users` - Get all users
@@ -78,10 +89,51 @@ The server runs on http://localhost:8080 by default.
 - `GET /api/users/{id}` - Get user by ID
 - `DELETE /api/users/{id}` - Delete user
 
+## Infrastructure Architecture
+
+The infrastructure is deployed on AWS using Terraform and follows a containerized approach with ECS Fargate:
+
+```
+infra/
+├── alb.tf                  # Application Load Balancer configuration
+├── ecr.tf                  # Elastic Container Registry
+├── ecs_cluster.tf          # ECS Cluster setup
+├── ecs_services_api.tf     # API service configuration
+├── ecs_services_web.tf     # Web service configuration
+├── outputs.tf              # Terraform outputs
+├── providers.tf            # AWS and Random providers
+├── rds.tf                  # RDS PostgreSQL database
+├── s3.tf                   # S3 bucket configuration
+├── security.tf             # Security groups and IAM roles
+├── variables.tf            # Input variables
+├── versions.tf             # Terraform version constraints
+└── vpc.tf                  # VPC and networking
+```
+
+### Infrastructure Components
+
+- **Compute**: ECS Fargate cluster hosting containerized API and Web services
+- **Load Balancing**: Application Load Balancer (ALB) with path-based routing
+- **Container Registry**: ECR repositories for API and Web images
+- **Database**: RDS PostgreSQL instance
+- **Storage**: S3 bucket for static assets
+- **Networking**: Custom VPC with public/private subnets
+- **Security**: Security groups and IAM roles for least privilege access
+
+### Deployment Process
+
+1. Build and push container images to ECR
+2. Configure `terraform.tfvars` with required variables
+3. Deploy infrastructure using Terraform
+4. Access services via ALB DNS name:
+   - `/` - Web service (Next.js frontend)
+   - `/api/*` - API service (Go backend)
+
 ## Technology Stack
 
 - **Frontend**: React 19.1.0, Next.js 15.5.2, TypeScript 5+, ESLint 9
 - **Backend**: Go 1.25.1, Standard library HTTP server, DDD + Clean Architecture
+- **Infrastructure**: AWS ECS Fargate, ALB, RDS PostgreSQL, ECR, S3, Terraform ~> 5.0
 - **Package Manager**: pnpm (frontend)
 - **Build Tool**: Turbopack (Next.js)
 
