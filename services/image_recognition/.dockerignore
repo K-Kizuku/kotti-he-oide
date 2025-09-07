@@ -1,0 +1,13 @@
+# 送信不要のファイル/ディレクトリ
+.venv
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+*.log
+.DS_Store
+node_modules/
+.git
+.gitignore
+.env*
+

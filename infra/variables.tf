@@ -43,6 +43,16 @@ variable "web_container_image" {
   default = "web:latest"
 }
 
+variable "microservice_container_port" {
+  type    = number
+  default = 9090
+}
+
+variable "microservice_container_image" {
+  type    = string
+  default = "microservice:latest"
+}
+
 locals {
   tags = {
     Project     = var.name_prefix

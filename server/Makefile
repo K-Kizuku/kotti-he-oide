@@ -1,4 +1,4 @@
-.PHONY: run build test clean
+.PHONY: run build test clean proto
 
 # Run the server in development mode
 run:
@@ -36,3 +36,7 @@ lint:
 # Development server with auto-reload (requires air)
 dev:
 	air
+
+# Generate gRPC stubs (Go/Python) via Buf v2
+proto:
+	cd .. && buf generate

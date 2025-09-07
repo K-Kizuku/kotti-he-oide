@@ -1,0 +1,14 @@
+version: v2
+
+# v2 ではワークスペースは buf.yaml に modules として定義します。
+modules:
+  - path: schema/proto
+
+lint:
+  use:
+    - DEFAULT
+
+breaking:
+  use:
+    - FILE
+

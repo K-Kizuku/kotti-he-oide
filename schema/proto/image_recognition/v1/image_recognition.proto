@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package image_recognition.v1;
+
+option go_package = "github.com/K-Kizuku/kotti-he-oide/server/internal/gen/image_recognition/v1;image_recognitionv1";
+
+// Hello 用の最小 RPC。将来的に画像判定 API を追加します。
+service ImageRecognitionService {
+  rpc Hello (HelloRequest) returns (HelloReply);
+}
+
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
+}
+

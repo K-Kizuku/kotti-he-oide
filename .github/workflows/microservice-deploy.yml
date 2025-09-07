@@ -1,40 +1,48 @@
-name: Deploy Frontend
+name: Deploy Image Recognition Microservice
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'frontend/**'
+      - 'services/image_recognition/**'
+      - 'schema/proto/**'
 
 env:
   AWS_REGION: ap-northeast-1
-  ECR_REPOSITORY: web
+  ECR_REPOSITORY: microservice
   ECS_CLUSTER: poc-cluster
-  ECS_SERVICE: poc-web
-  # リポジトリ変数/シークレットから渡す公開APIのベースURL
-  # 例: リポジトリ変数 `NEXT_PUBLIC_API_URL` を設定してください
-  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+  ECS_SERVICE: poc-microservice
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend
+        working-directory: services/image_recognition
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 20
+          python-version: '3.12'
+
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run: |
-          corepack enable
-          pnpm install --frozen-lockfile
+        run: uv sync
 
-      - name: Lint
-        run: pnpm lint
+      - name: Run lint
+        run: make lint
+
+      - name: Run type check
+        run: make type
+
+      - name: Run tests
+        run: make test
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -51,12 +59,10 @@ jobs:
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
-          NEXT_PUBLIC_API_URL: ${{ env.NEXT_PUBLIC_API_URL }}
         run: |
-          # 変数が未設定の場合のフォールバック（必要に応じて変更）
-          API_URL=${NEXT_PUBLIC_API_URL:-https://kotti.kizuku-hackathon.work}
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL=$API_URL \
+          # リポジトリルートに移動してビルドコンテキストを設定
+          cd ../..
+          docker build -f services/image_recognition/Dockerfile \
             -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker tag $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $REGISTRY/$ECR_REPOSITORY:latest

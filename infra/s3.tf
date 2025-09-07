@@ -55,3 +55,36 @@ resource "aws_s3_bucket_policy" "assets" {
     }]
   })
 }
+
+# マイクロサービス専用のS3バケット
+resource "aws_s3_bucket" "microservice" {
+  bucket        = "${var.name_prefix}-microservice-data-${random_pet.this.id}"
+  force_destroy = true
+  tags          = local.tags
+}
+
+resource "aws_s3_bucket_ownership_controls" "microservice" {
+  bucket = aws_s3_bucket.microservice.id
+
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "microservice" {
+  bucket = aws_s3_bucket.microservice.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_acl" "microservice" {
+  depends_on = [
+    aws_s3_bucket_ownership_controls.microservice,
+    aws_s3_bucket_public_access_block.microservice
+  ]
+  bucket = aws_s3_bucket.microservice.id
+  acl    = "private"
+}

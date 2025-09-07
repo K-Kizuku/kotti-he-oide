@@ -52,6 +52,7 @@ func main() {
 	pushSubscriptionHandler := handler.NewPushSubscriptionHandler(pushSubscriptionUseCase)
 	pushNotificationHandler := handler.NewPushNotificationHandler(pushNotificationUseCase)
 	vapidHandler := handler.NewVAPIDHandler(vapidUseCase)
+	mlHandler := handler.NewMLHandler()
 
 	// Background service for processing push jobs
 	go func() {
@@ -83,6 +84,9 @@ func main() {
 	mux.HandleFunc("DELETE /api/push/subscriptions/{id}", pushSubscriptionHandler.Unsubscribe)
 	mux.HandleFunc("POST /api/push/send", pushNotificationHandler.SendNotification)
 	mux.HandleFunc("POST /api/push/send/batch", pushNotificationHandler.SendBatchNotification)
+
+	// ML (gRPC 経由) API プロキシ
+	mux.HandleFunc("GET /api/ml/hello", mlHandler.HelloProxy)
 
 	log.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {

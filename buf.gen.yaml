@@ -1,0 +1,25 @@
+version: v2
+
+# 生成先を Go/Python 双方に出力します。
+# Buf のリモートプラグイン（BSR）を利用するため、`protoc-*` のローカル導入は不要です。
+plugins:
+  # Go (messages)
+  - remote: buf.build/protocolbuffers/go
+    out: server/internal/gen
+    opt:
+      - paths=source_relative
+
+  # Go gRPC (stubs)
+  - remote: buf.build/grpc/go
+    out: server/internal/gen
+    opt:
+      - paths=source_relative
+
+  # Python (messages)
+  - remote: buf.build/protocolbuffers/python
+    out: services/image_recognition/app/gen
+
+  # Python gRPC (stubs)
+  - remote: buf.build/grpc/python
+    out: services/image_recognition/app/gen
+
