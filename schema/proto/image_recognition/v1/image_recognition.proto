@@ -2,13 +2,21 @@ syntax = "proto3";
 
 package image_recognition.v1;
 
-option go_package = "github.com/K-Kizuku/kotti-he-oide/server/internal/gen/image_recognition/v1;image_recognitionv1";
+option go_package = "github.com/K-Kizuku/kotti-he-oide/internal/gen/image_recognition/v1;image_recognitionv1";
 
-// Hello 用の最小 RPC。将来的に画像判定 API を追加します。
+// 画像認識サービス
 service ImageRecognitionService {
+  // 互換性維持のためのサンプル RPC
   rpc Hello (HelloRequest) returns (HelloReply);
+
+  // 入力画像の類似度を算出して返す
+  rpc RecognizeImage(RecognizeImageRequest) returns (RecognizeImageResponse);
+
+  // ヘルスチェック
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
 }
 
+// Hello (既存)
 message HelloRequest {
   string name = 1;
 }
@@ -17,3 +25,25 @@ message HelloReply {
   string message = 1;
 }
 
+// 類似度判定リクエスト
+message RecognizeImageRequest {
+  // 入力画像（生バイト、JPEG/PNG/WebP/BMP など）
+  bytes image_data = 1;
+  // 類似度の閾値（0.0-1.0）。未指定時はサーバ既定値。
+  optional float threshold = 2;
+}
+
+// 類似度判定レスポンス
+message RecognizeImageResponse {
+  bool is_match = 1;
+  float similarity_score = 2;
+  string error_message = 3;
+}
+
+// ヘルスチェック
+message HealthCheckRequest {}
+
+message HealthCheckResponse {
+  bool healthy = 1;
+  string status = 2;
+}

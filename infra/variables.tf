@@ -45,7 +45,8 @@ variable "web_container_image" {
 
 variable "microservice_container_port" {
   type    = number
-  default = 9090
+  # gRPC 標準ポートに合わせる
+  default = 50051
 }
 
 variable "microservice_container_image" {

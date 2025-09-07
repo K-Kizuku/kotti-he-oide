@@ -21,6 +21,12 @@ resource "aws_ecs_task_definition" "api" {
         containerPort = var.api_container_port
         protocol      = "tcp"
       }]
+      environment = [
+        {
+          name  = "IMAGE_RECOGNITION_GRPC_ADDR"
+          value = "microservice.${var.name_prefix}.local:${var.microservice_container_port}"
+        }
+      ]
       logConfiguration = {
         logDriver = "awslogs"
         options = {

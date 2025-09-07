@@ -87,6 +87,7 @@ func main() {
 
 	// ML (gRPC 経由) API プロキシ
 	mux.HandleFunc("GET /api/ml/hello", mlHandler.HelloProxy)
+	mux.HandleFunc("POST /api/ml/recognize", mlHandler.RecognizeImageProxy)
 
 	log.Printf("Server starting on port %s", port)
 	if err := http.ListenAndServe(":"+port, mux); err != nil {

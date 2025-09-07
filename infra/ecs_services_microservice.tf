@@ -33,6 +33,10 @@ resource "aws_ecs_task_definition" "microservice" {
         {
           name  = "API_SERVER_ENDPOINT"
           value = "http://api:${var.api_container_port}"
+        },
+        {
+          name  = "GRPC_PORT"
+          value = tostring(var.microservice_container_port)
         }
       ]
       logConfiguration = {
@@ -61,6 +65,11 @@ resource "aws_ecs_service" "microservice" {
     assign_public_ip = false
   }
 
+  # Cloud Map でサービスディスカバリを有効化
+  service_registries {
+    registry_arn = aws_service_discovery_service.microservice.arn
+  }
+
   tags = local.tags
 
   # Service discovery (オプション: 必要に応じて有効化)
@@ -69,25 +78,25 @@ resource "aws_ecs_service" "microservice" {
   # }
 }
 
-# Service Discovery (オプション: gRPCサービス発見が必要な場合)
-# resource "aws_service_discovery_private_dns_namespace" "this" {
-#   name        = "${var.name_prefix}.local"
-#   description = "Private DNS namespace for microservices"
-#   vpc         = aws_vpc.this.id
-#   tags        = local.tags
-# }
-#
-# resource "aws_service_discovery_service" "microservice" {
-#   name = "microservice"
-#
-#   dns_config {
-#     namespace_id = aws_service_discovery_private_dns_namespace.this.id
-#     dns_records {
-#       ttl  = 10
-#       type = "A"
-#     }
-#   }
-#
-#   health_check_grace_period_seconds = 30
-#   tags                             = local.tags
-# }
+# Service Discovery (gRPC サービス発見)
+resource "aws_service_discovery_private_dns_namespace" "this" {
+  name        = "${var.name_prefix}.local"
+  description = "Private DNS namespace for microservices"
+  vpc         = aws_vpc.this.id
+  tags        = local.tags
+}
+
+resource "aws_service_discovery_service" "microservice" {
+  name = "microservice"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.this.id
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+
+  health_check_grace_period_seconds = 30
+  tags                             = local.tags
+}
