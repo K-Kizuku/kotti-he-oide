@@ -1,0 +1,52 @@
+.effectsContainer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hiddenSvg { position: absolute; }
+
+.noise {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: overlay;
+  opacity: 0.06;
+  filter: url(#noiseFilter);
+  background: repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0 1px, rgba(0,0,0,0.02) 1px 2px);
+  animation: noiseShift 1.8s steps(20) infinite;
+}
+
+.scanlines {
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 0, 0, 0.02) 0px,
+    rgba(255, 0, 0, 0.02) 1px,
+    transparent 2px,
+    transparent 3px
+  );
+  opacity: 0.35;
+  mix-blend-mode: plus-lighter;
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(1200px 600px at 50% -100px, rgba(158,0,0,0.15) 0%, transparent 55%),
+    radial-gradient(circle at 50% 120%, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.95) 65%);
+}
+
+@keyframes noiseShift {
+  0% { transform: translate(0,0); }
+  25% { transform: translate(1px,-1px); }
+  50% { transform: translate(-1px,1px); }
+  75% { transform: translate(1px,1px); }
+  100% { transform: translate(0,0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .noise { animation: none; }
+}
+

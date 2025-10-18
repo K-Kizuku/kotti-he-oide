@@ -1,0 +1,100 @@
+.hero {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 96px 16px 56px;
+  color: var(--color-foreground, #e6e6e6);
+  min-height: 60svh;
+}
+
+.heroInner {
+  text-align: center;
+  max-width: 960px;
+}
+
+.title {
+  position: relative;
+  margin: 0 0 12px;
+  line-height: 1.1;
+}
+
+.titleText {
+  font-size: clamp(40px, 7vw, 80px);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-family: var(--font-noto-serif-jp), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+}
+
+.glitch {
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  text-shadow: 2px 0 rgba(158, 0, 0, 0.5), -2px 0 rgba(0, 180, 180, 0.3);
+  animation: glitchShift 2.6s steps(6) infinite;
+  pointer-events: none;
+}
+
+@keyframes glitchShift {
+  0% { transform: translate(0,0); }
+  20% { transform: translate(1px,-1px); }
+  40% { transform: translate(-1px,1px); }
+  60% { transform: translate(2px,0); }
+  80% { transform: translate(-2px,0); }
+  100% { transform: translate(0,0); }
+}
+
+.subtitle {
+  margin: 6px 0 14px;
+  color: #c9c9c9;
+  font-size: clamp(16px, 2.6vw, 20px);
+  letter-spacing: 0.02em;
+  display: inline-block;
+  position: relative;
+}
+
+/* ノイズ風の重ねテキスト */
+.subtitle::before,
+.subtitle::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  will-change: clip-path, transform;
+}
+.subtitle::before {
+  text-shadow: -1px 0 rgba(158,0,0,0.8);
+  transform: translateX(-1px);
+  animation: noiseClip1 1.6s steps(18) infinite;
+}
+.subtitle::after {
+  text-shadow: 1px 0 rgba(0,200,200,0.6);
+  transform: translateX(1px);
+  animation: noiseClip2 1.9s steps(20) infinite reverse;
+}
+
+@keyframes noiseClip1 {
+  0% { clip-path: inset(90px 0 20px 0); }
+  25% { clip-path: inset(55px 0 60px 0); }
+  50% { clip-path: inset(30px 0 80px 0); }
+  75% { clip-path: inset(20px 0 90px 0); }
+  100% { clip-path: inset(90px 0 20px 0); }
+}
+@keyframes noiseClip2 {
+  0% { clip-path: inset(10% 0 65% 0); }
+  25% { clip-path: inset(20% 0 55% 0); }
+  50% { clip-path: inset(60% 0 25% 0); }
+  75% { clip-path: inset(30% 0 50% 0); }
+  100% { clip-path: inset(10% 0 65% 0); }
+}
+
+.description {
+  margin-top: 8px;
+  color: #a9a9a9;
+  font-size: clamp(14px, 2.2vw, 16px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glitch { animation: none; }
+  .subtitle::before, .subtitle::after { animation: none; }
+}
+
