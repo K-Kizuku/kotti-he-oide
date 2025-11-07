@@ -112,6 +112,20 @@ make build
 
 ## API エンドポイント
 
+詳細なAPI仕様は [OpenAPI 3.0仕様書](./openapi.yaml) を参照してください。
+
+### OpenAPI仕様書の利用
+
+```bash
+# Swagger UIでドキュメントを表示（要Docker）
+docker run -p 8081:8080 -e SWAGGER_JSON=/openapi.yaml -v $(pwd)/openapi.yaml:/openapi.yaml swaggerapi/swagger-ui
+
+# ブラウザでアクセス
+open http://localhost:8081
+```
+
+または、[Swagger Editor](https://editor.swagger.io/)で`openapi.yaml`を開いてください。
+
 ### セッション管理
 
 - `POST /api/session` - 新規セッション作成
