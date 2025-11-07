@@ -28,7 +28,7 @@ server/
 ├── go.sum                     # 依存関係チェックサム
 ├── Makefile                   # ビルドと開発コマンド
 ├── Dockerfile                 # コンテナビルド定義
-├── schema.sql                 # PostgreSQL用データベーススキーマ
+├── schema.sql                 # MySQL用データベーススキーマ
 ├── bin/                       # ビルド成果物
 ├── cmd/server/                # コマンドラインインターフェース
 ├── internal/
@@ -66,7 +66,7 @@ infra/
 ├── ecs_services_web.tf     # Webサービス設定
 ├── outputs.tf              # Terraform出力値
 ├── providers.tf            # AWSとRandomプロバイダー
-├── rds.tf                  # RDS PostgreSQLデータベース
+├── rds.tf                  # RDS MySQLデータベース
 ├── s3.tf                   # S3バケット設定
 ├── security.tf             # セキュリティグループとIAMロール
 ├── variables.tf            # 入力変数
@@ -197,7 +197,7 @@ GitHub Actionsによる自動デプロイメント：
 ### 現在の実装状況
 
 - レイヤードアーキテクチャ + DDD の完全実装済み
-- PostgreSQLデータベース対応（ゲームセッション、プレイヤー回答、メッセージ保存）
+- MySQLデータベース対応（ゲームセッション、プレイヤー回答、メッセージ保存）
 - Dockerコンテナ化とCI/CD自動デプロイ完備
 - AWS ECS Fargate での本番環境運用中
 - Terraform によるインフラストラクチャ as Code 実装済み

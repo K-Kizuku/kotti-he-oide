@@ -16,7 +16,7 @@
 ## インフラストラクチャ (AWS)
 - **コンテナオーケストレーション**: ECS Fargate
 - **ロードバランサー**: Application Load Balancer (ALB)
-- **データベース**: RDS PostgreSQL（Web Push用スキーマ含む）
+- **データベース**: RDS MySQL（Web Push用スキーマ含む）
 - **コンテナレジストリ**: Elastic Container Registry (ECR)
 - **ストレージ**: S3
 - **ネットワーク**: VPC、パブリック/プライベートサブネット
@@ -61,7 +61,7 @@ make lint    # golangci-lintチェック（エラーがあれば修正必須）
 
 ## 主要ライブラリ
 ### バックエンド
-- **PostgreSQL**: `github.com/jackc/pgx/v5` v5.7.5
+- **MySQL**: `github.com/go-sql-driver/mysql` v1.8.1
 - **gRPC**: Protocol Buffers（画像認識サービス連携用）
 - **セッション管理**: UUID生成、1時間TTL
 - **画像処理**: S3アップロード、類似度計算

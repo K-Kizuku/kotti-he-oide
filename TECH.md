@@ -29,7 +29,7 @@
 - 言語: Go 1.25.1
 - HTTP: 標準ライブラリ（net/http）
 - アーキテクチャ: DDD + レイヤード（`internal/{domain,application,infrastructure,interfaces}`）
-- データ永続化: 現状はインメモリ実装（`internal/infrastructure/persistence/memory_*`）。PostgreSQL 用 `server/schema.sql` は用意済みだが、アプリからは未接続。
+- データ永続化: 現状はインメモリ実装（`internal/infrastructure/persistence/memory_*`）。MySQL 用 `server/schema.sql` は用意済みだが、アプリからは未接続。
 - gRPC クライアント: 画像認識マイクロサービスへ接続（`/api/ml/*` プロキシ）。
 - 主要ライブラリ（実際に使用）:
   - `github.com/SherClockHolmes/webpush-go`（Web Push 送信 / VAPID キー生成）
@@ -69,7 +69,7 @@
 ## 2. アーキテクチャ
 
 - バックエンドは DDD + レイヤード。依存方向は Interfaces → Application → Domain ← Infrastructure。
-- 現状の永続化はメモリ実装。将来的に PostgreSQL 実装（`schema.sql`）へ差し替え予定。
+- 現状の永続化はメモリ実装。将来的に MySQL 実装（`schema.sql`）へ差し替え予定。
 - 画像認識は Python gRPC サービスへ委譲し、Go 側で HTTP→gRPC のプロキシを提供。
 
 ---
@@ -112,7 +112,7 @@ uv run mypy .
 
 ## 4. データベース設計（server/schema.sql 準拠、現状は未接続）
 
-アプリはインメモリ実装で動作中ですが、PostgreSQL 用のスキーマは以下を含みます。
+アプリはインメモリ実装で動作中ですが、MySQL 用のスキーマは以下を含みます。
 
 - `push_subscriptions`：購読情報（`endpoint` UNIQUE、`is_valid` 部分インデックス）
 - `notification_templates`：通知テンプレート
@@ -238,7 +238,7 @@ buf generate   # ルートで実行（Go: server/internal/gen, Python: services/
 - API → マイクロサービスは Cloud Map のプライベート DNS（例: `microservice.${var.name_prefix}.local`）で接続
 
 ### データ/ログ
-- RDS（PostgreSQL）定義あり（現状アプリ未接続）
+- RDS（MySQL）定義あり（現状アプリ未接続）
 - S3（参照画像など）
 - CloudWatch Logs（各サービス）
 
@@ -278,7 +278,7 @@ buf generate   # ルートで実行（Go: server/internal/gen, Python: services/
 ### バックエンド
 - Go（net/http）
 - 非同期 Push 送信ワーカー（メモリキュー）
-- DB 接続プール（pgx 等）は未使用
+- DB 接続プール（MySQL driver 等）は未使用
 
 ---
 
@@ -325,7 +325,7 @@ buf generate   # ルートで実行（Go: server/internal/gen, Python: services/
 
 ## 14. 今後の技術的課題
 
-- RDS への接続・リポジトリ移行（メモリ→PostgreSQL）
+- RDS への接続・リポジトリ移行（メモリ→MySQL）
 - 認証（JWT/OIDC）
 - クリック計測 API の実装
 - キャッシュ（例: Redis）/ 分散トレーシング
