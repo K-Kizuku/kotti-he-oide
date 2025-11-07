@@ -1,0 +1,9 @@
+version: v2
+
+# Python のみ生成するテンプレート
+plugins:
+  - remote: buf.build/protocolbuffers/python
+    out: services/image_recognition/app/gen
+  - remote: buf.build/grpc/python
+    out: services/image_recognition/app/gen
+
