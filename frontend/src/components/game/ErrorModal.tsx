@@ -18,7 +18,7 @@ import styles from './ErrorModal.module.css';
  * useGameFlowから現在のエラー状態を取得し、自動的にモーダル表示します
  */
 export default function ErrorModal() {
-  const { currentError, clearError } = useGameFlow();
+  const { currentError, clearError, transitionTo } = useGameFlow();
 
   // エラーが発生した時のログ出力
   useEffect(() => {
@@ -45,6 +45,12 @@ export default function ErrorModal() {
     }
   };
 
+  const handleGoToStart = async () => {
+    // エラーをクリアしてからs0へ強制遷移
+    clearError();
+    await transitionTo('s0', true); // skipValidation = true
+  };
+
   return (
     <Modal
       isOpen={true}
@@ -56,20 +62,23 @@ export default function ErrorModal() {
       footer={
         <div className={styles.footer}>
           {isRecoverable ? (
-            <Button onClick={handleClose} variant="primary" fullWidth>
-              OK
-            </Button>
+            // 復帰可能エラー: OK + 最初に戻る
+            <>
+              <Button onClick={handleClose} variant="primary" fullWidth>
+                OK
+              </Button>
+              <Button onClick={handleGoToStart} variant="secondary" fullWidth>
+                最初に戻る
+              </Button>
+            </>
           ) : (
+            // 復帰不可能エラー: 再読み込み + 最初に戻る
             <>
               <Button onClick={handleReload} variant="primary" fullWidth>
                 再読み込み
               </Button>
-              <Button
-                onClick={() => (window.location.href = '/game/s0')}
-                variant="secondary"
-                fullWidth
-              >
-                最初から
+              <Button onClick={handleGoToStart} variant="secondary" fullWidth>
+                最初に戻る
               </Button>
             </>
           )}
