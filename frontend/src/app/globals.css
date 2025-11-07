@@ -4,6 +4,25 @@
   --foreground: #e6e6e6; /* 明るい灰 */
   --accent: #9e0000;     /* 深紅 */
   --muted: #0d0d12;      /* ほの暗い背景 */
+
+  /* レトロ・ヴィンテージ調カラー */
+  --sepia: #704214;      /* セピア */
+  --vintage-paper: #f4e8d0; /* 古紙色 */
+  --vintage-ink: #2b1810; /* 古いインク */
+  --rust: #7c3626;       /* 錆色 */
+  --old-gold: #c9a961;   /* 古びた金色 */
+
+  /* ホラー演出用 */
+  --blood-red: #8b0000;  /* 血の赤 */
+  --ghost-white: rgba(255, 255, 255, 0.05); /* 幽霊のような白 */
+  --shadow: rgba(0, 0, 0, 0.8); /* 深い影 */
+
+  /* UI要素 */
+  --overlay-bg: rgba(7, 7, 10, 0.85);
+  --border-subtle: rgba(230, 230, 230, 0.1);
+  --success: #2d5016;
+  --error: #7c1d1d;
+  --warning: #7c5c1d;
 }
 
 html,
@@ -15,9 +34,13 @@ body {
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: var(--font-noto-serif-jp), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  font-family: var(--font-onryou), var(--font-noto-serif-jp), ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.7;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
 }
 
 * {
@@ -37,15 +60,196 @@ a {
   }
 }
 
-/* アクセントカラーのユーティリティ（最低限） */
+/* ========================================
+   タイポグラフィ階層
+   ======================================== */
+.text-title {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.2;
+  letter-spacing: 0.05em;
+}
+
+.text-heading {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.3;
+}
+
+.text-body {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  line-height: 1.7;
+}
+
+.text-small {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  line-height: 1.5;
+}
+
+.text-horror {
+  font-family: var(--font-onryou), serif;
+  color: var(--blood-red);
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+  letter-spacing: 0.1em;
+}
+
+/* ========================================
+   レイアウトユーティリティ
+   ======================================== */
+.container {
+  width: 100%;
+  max-width: 100vw;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.center-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.fixed-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-subtle);
+  z-index: 100;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay-bg);
+  z-index: 10;
+}
+
+/* ========================================
+   ホラー演出スタイル
+   ======================================== */
+.vintage-filter {
+  position: relative;
+}
+
+.vintage-filter::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--sepia);
+  mix-blend-mode: overlay;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vignette {
+  position: relative;
+}
+
+.vignette::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.horror-noise {
+  position: relative;
+}
+
+.horror-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.03) 3px, rgba(255, 255, 255, 0.03) 3px),
+    repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, 0.03) 3px, rgba(255, 255, 255, 0.03) 3px);
+  animation: noise 0.2s infinite;
+  pointer-events: none;
+  opacity: 0.5;
+  z-index: 2;
+}
+
+@keyframes noise {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-1px, -1px); }
+  20% { transform: translate(1px, 1px); }
+  30% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  70% { transform: translate(-1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  90% { transform: translate(-1px, -1px); }
+}
+
+.glitch {
+  position: relative;
+  animation: glitch 5s infinite;
+}
+
+@keyframes glitch {
+  0%, 90%, 100% { transform: translateX(0); }
+  91% { transform: translateX(-5px); }
+  92% { transform: translateX(5px); }
+  93% { transform: translateX(-5px); }
+  94% { transform: translateX(0); }
+}
+
+/* ========================================
+   ボタン・インタラクション
+   ======================================== */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ========================================
+   アクセントカラーのユーティリティ
+   ======================================== */
 .text-accent { color: var(--accent); }
 .bg-accent { background: var(--accent); }
+.text-sepia { color: var(--sepia); }
+.bg-sepia { background: var(--sepia); }
 
-/* リンクのフェードトランジション */
+/* ========================================
+   リンクのフェードトランジション
+   ======================================== */
 a { transition: color .18s ease, text-shadow .18s ease; }
 a:hover { text-shadow: 0 0 10px rgba(158,0,0,0.25); }
 
-/* アニメーション抑制 */
+/* ========================================
+   アニメーション抑制
+   ======================================== */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .horror-noise::before {
+    animation: none;
+  }
 }

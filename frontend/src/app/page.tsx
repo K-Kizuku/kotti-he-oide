@@ -1,59 +1,45 @@
-import BackgroundEffects from "@/components/home/BackgroundEffects";
-import HeroSection from "@/components/home/HeroSection";
-import FeatureCard from "@/components/home/FeatureCard";
-import CTAButton from "@/components/home/CTAButton";
-import { homeContent } from "./homeContent";
+/**
+ * ホームページ - QRコードからのランディング
+ *
+ * ゲーム開始前の案内ページ
+ */
+
+import Link from "next/link";
 import styles from "./page.module.css";
 
 export default function Home() {
-  const { hero, features, pwaFeatures, footer } = homeContent;
-
   return (
     <div className={styles.darkRoot}>
-      <BackgroundEffects enableNoise enableScanlines enableVignette />
-
       <main className={styles.main}>
-        <HeroSection
-          title={hero.title}
-          subtitle={hero.subtitle}
-          description={hero.description}
-        />
+        <section style={{ textAlign: "center", padding: "2rem" }}>
+          <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
+            赤煉瓦文化館 〜こっちにおいで〜
+          </h1>
+          <p style={{ marginBottom: "2rem", color: "#666" }}>
+            体験型Webホラーゲーム
+          </p>
 
-        {/* Features */}
-        <section className={styles.features} aria-label="主要機能">
-          {features.map((f) => (
-            <FeatureCard key={f.id} {...f} />
-          ))}
-        </section>
+          <Link
+            href="/game/s0"
+            style={{
+              display: "inline-block",
+              padding: "1rem 2rem",
+              background: "#000",
+              color: "#fff",
+              textDecoration: "none",
+              borderRadius: "4px",
+              fontSize: "1.2rem"
+            }}
+          >
+            ゲームを開始
+          </Link>
 
-        {/* PWA 特長 */}
-        <section className={styles.pwa} aria-label="PWA機能">
-          <h2 className={styles.pwaTitle}>PWAの主な特長</h2>
-          <ul className={styles.pwaGrid}>
-            {pwaFeatures.map((p) => (
-              <li key={p.id} className={styles.pwaItem}>
-                <div className={styles.pwaName}>{p.name}</div>
-                <div className={styles.pwaDesc}>{p.description}</div>
-              </li>
-            ))}
-          </ul>
-          <div className={styles.pwaCtas}>
-            <CTAButton text="通知を設定" href="/notifications" />
-            <CTAButton text="フィルターを試す" href="/camera-filters" variant="secondary" />
+          <div style={{ marginTop: "3rem", fontSize: "0.9rem", color: "#999" }}>
+            <p>プレイ時間：20〜30分（館内移動込み）</p>
+            <p>推奨環境：カメラ・音声・イヤホン</p>
           </div>
         </section>
       </main>
-
-      <footer className={styles.footer}>
-        <nav className={styles.footerNav} aria-label="フッターナビゲーション">
-          {footer.links.map((l) => (
-            <a key={l.href} href={l.href} className={styles.footerLink}>
-              {l.label}
-            </a>
-          ))}
-        </nav>
-        <p className={styles.copyright}>{footer.copyright}</p>
-      </footer>
     </div>
   );
 }

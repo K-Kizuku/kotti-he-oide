@@ -1,0 +1,120 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--foreground);
+  opacity: 0.9;
+}
+
+/* ========================================
+   トラック（背景）
+   ======================================== */
+.track {
+  position: relative;
+  width: 100%;
+  background: var(--muted);
+  border-radius: 9999px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   フィル（進捗バー）
+   ======================================== */
+.fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 0.5rem;
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.fill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.percentage {
+  position: relative;
+  z-index: 1;
+  font-size: clamp(0.625rem, 1.5vw, 0.75rem);
+  font-weight: 700;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* ========================================
+   バリエーション
+   ======================================== */
+.default {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--old-gold) 100%);
+}
+
+.success {
+  background: linear-gradient(90deg, var(--success) 0%, #3d7519 100%);
+}
+
+.warning {
+  background: linear-gradient(90deg, var(--warning) 0%, #a07b1d 100%);
+}
+
+.danger {
+  background: linear-gradient(90deg, var(--blood-red) 0%, var(--rust) 100%);
+}
+
+/* ========================================
+   サイズ
+   ======================================== */
+.small {
+  height: 8px;
+}
+
+.small .percentage {
+  display: none;
+}
+
+.medium {
+  height: 24px;
+}
+
+.large {
+  height: 32px;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .fill {
+    padding: 0 0.25rem;
+  }
+}

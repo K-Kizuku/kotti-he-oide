@@ -1,8 +1,8 @@
 'use client';
 
-import PushNotificationManager from '@/components/push/PushNotificationManager';
-import NotificationStatus from '@/components/push/NotificationStatus';
-import { checkWebPushSupport } from '@/lib/utils/notificationUtils';
+import PushNotificationManager from '@/_archive/components/push/PushNotificationManager';
+import NotificationStatus from '@/_archive/components/push/NotificationStatus';
+import { checkWebPushSupport } from '@/_archive/lib/utils/notificationUtils';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 

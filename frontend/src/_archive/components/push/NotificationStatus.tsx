@@ -1,8 +1,8 @@
 'use client';
 
-import { useNotificationPermission } from '@/hooks/useNotificationPermission';
-import { usePushNotification } from '@/hooks/usePushNotification';
-import { checkWebPushSupport } from '@/lib/utils/notificationUtils';
+import { useNotificationPermission } from '@/_archive/hooks/useNotificationPermission';
+import { usePushNotification } from '@/_archive/hooks/usePushNotification';
+import { checkWebPushSupport } from '@/_archive/lib/utils/notificationUtils';
 import { useEffect, useState } from 'react';
 
 interface WebPushSupportInfo {

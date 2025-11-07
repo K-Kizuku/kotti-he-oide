@@ -1,0 +1,43 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  width: 100%;
+}
+
+/* ========================================
+   字幕エリア
+   ======================================== */
+.subtitle {
+  padding: 1.5rem;
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.subtitle.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.subtitle p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  line-height: 1.8;
+  color: var(--foreground);
+  text-align: center;
+  margin: 0;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .subtitle {
+    padding: 1rem;
+  }
+}

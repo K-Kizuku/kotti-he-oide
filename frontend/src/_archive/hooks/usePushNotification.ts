@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { pushAPI } from '@/lib/api/pushApi';
-import { registerServiceWorker } from '@/lib/utils/serviceWorker';
-import { arrayBufferToBase64, urlBase64ToUint8Array } from '@/lib/utils/notificationUtils';
+import { pushAPI } from '@/_archive/lib/api/pushApi';
+import { registerServiceWorker } from '@/_archive/lib/utils/serviceWorker';
+import { arrayBufferToBase64, urlBase64ToUint8Array } from '@/_archive/lib/utils/notificationUtils';
 import { storage } from '@/lib/utils/storage';
-import { PushSubscriptionState } from '@/types/push';
+import { PushSubscriptionState } from '@/_archive/types/push';
 
 export function usePushNotification() {
   const [state, setState] = useState<PushSubscriptionState>({

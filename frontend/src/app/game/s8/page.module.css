@@ -1,0 +1,182 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.8),
+      rgba(0, 0, 0, 0.9)
+    ),
+    var(--background);
+  color: var(--foreground);
+  padding: 6rem 1rem 2rem;
+  overflow-y: auto;
+}
+
+/* ========================================
+   コンテンツ
+   ======================================== */
+.content {
+  max-width: 700px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ========================================
+   ヘッダー
+   ======================================== */
+.header {
+  text-align: center;
+}
+
+.title {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: normal;
+  color: var(--old-gold);
+  margin: 0 0 0.75rem;
+}
+
+.subtitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========================================
+   マップコンテナ
+   ======================================== */
+.mapContainer {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.mapPlaceholder {
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(
+    135deg,
+    rgba(112, 66, 20, 0.2),
+    rgba(139, 0, 0, 0.2)
+  );
+  border: 2px dashed var(--border-subtle);
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.mapPlaceholder p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.mapHint {
+  font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
+  opacity: 0.7;
+}
+
+/* ========================================
+   メッセージコンテナ
+   ======================================== */
+.messagesContainer {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.noMessages {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.noMessages p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--muted-foreground);
+  line-height: 1.8;
+  margin: 0 0 0.75rem;
+}
+
+.messagesList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.messageCard {
+  background: var(--muted);
+  border: 2px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.messageText {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.messageDate {
+  font-family: var(--font-onryou), serif;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  text-align: right;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .container {
+    padding: 6rem 1rem 2rem;
+  }
+
+  .mapContainer {
+    padding: 1.5rem;
+  }
+
+  .messagesContainer {
+    padding: 1.5rem;
+    max-height: 50vh;
+  }
+
+  .messageCard {
+    padding: 1rem;
+  }
+}

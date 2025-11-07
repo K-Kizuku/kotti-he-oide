@@ -1,0 +1,226 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.7),
+      rgba(0, 0, 0, 0.85)
+    ),
+    var(--background);
+  color: var(--foreground);
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+/* ========================================
+   コンテンツ
+   ======================================== */
+.content {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ========================================
+   ヘッダー
+   ======================================== */
+.header {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.title {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.75rem, 5vw, 2.25rem);
+  font-weight: normal;
+  color: var(--old-gold);
+  margin: 0 0 0.75rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.subtitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========================================
+   進捗インジケーター
+   ======================================== */
+.progress {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 0;
+}
+
+.progressDot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--muted);
+  border: 2px solid var(--border-subtle);
+  transition: all 0.3s ease;
+}
+
+.progressDot.active {
+  width: 16px;
+  height: 16px;
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px rgba(158, 0, 0, 0.2);
+}
+
+.progressDot.completed {
+  background: var(--old-gold);
+  border-color: var(--old-gold);
+}
+
+/* ========================================
+   場所カード
+   ======================================== */
+.placeCard {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.placeNumber {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
+  color: var(--muted-foreground);
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background: var(--muted);
+  border-radius: 4px;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+/* ========================================
+   画像
+   ======================================== */
+.imageContainer {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--muted);
+  border: 2px solid var(--border-subtle);
+}
+
+.placeImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholderImage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(112, 66, 20, 0.2),
+    rgba(139, 0, 0, 0.2)
+  );
+}
+
+.placeholderIcon {
+  font-size: 4rem;
+  opacity: 0.5;
+}
+
+/* ========================================
+   場所情報
+   ======================================== */
+.placeInfo {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.placeName {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: normal;
+  color: var(--old-gold);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.placeDescription {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ========================================
+   ナビゲーション
+   ======================================== */
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .placeCard {
+    padding: 1.5rem;
+  }
+
+  .navigation {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .navigation button {
+    width: 100%;
+  }
+
+  .spacer {
+    display: none;
+  }
+}

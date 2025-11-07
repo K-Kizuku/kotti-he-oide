@@ -1,0 +1,251 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.7),
+      rgba(0, 0, 0, 0.85)
+    ),
+    var(--background);
+  color: var(--foreground);
+  padding: 2rem 1rem 8rem;
+  overflow-y: auto;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: var(--font-onryou), serif;
+  font-size: 1.5rem;
+  color: var(--old-gold);
+}
+
+/* ========================================
+   コンテンツ
+   ======================================== */
+.content {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ========================================
+   ヘッダー
+   ======================================== */
+.header {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.title {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: normal;
+  color: var(--blood-red);
+  margin: 0 0 1rem;
+  white-space: pre-line;
+  line-height: 1.4;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.subtitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--old-gold);
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* ========================================
+   セクション
+   ======================================== */
+.section {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.sectionTitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+  color: var(--old-gold);
+  margin: 0 0 1rem;
+  font-weight: normal;
+}
+
+.label {
+  display: block;
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--muted-foreground);
+  margin-bottom: 0.75rem;
+}
+
+/* ========================================
+   言語選択
+   ======================================== */
+.languageButtons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.languageButtons button {
+  flex: 1;
+}
+
+/* ========================================
+   必要な準備
+   ======================================== */
+.requirements {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.requirement {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--muted);
+  border-radius: 6px;
+  font-family: var(--font-onryou), serif;
+}
+
+.requirementIcon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.requirementText {
+  flex: 1;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.note {
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+  opacity: 0.7;
+}
+
+.granted {
+  color: var(--success);
+  font-weight: 500;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+/* ========================================
+   警告
+   ======================================== */
+.warningBox {
+  background: rgba(139, 0, 0, 0.2);
+  border: 2px solid var(--blood-red);
+  border-radius: 6px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.warningTitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 2.5vw, 1.125rem);
+  color: var(--blood-red);
+  margin: 0 0 0.75rem;
+  font-weight: normal;
+}
+
+.warningText {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-line;
+}
+
+/* ========================================
+   チェックボックス
+   ======================================== */
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  user-select: none;
+}
+
+.checkbox input[type='checkbox'] {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.checkbox:hover {
+  opacity: 0.9;
+}
+
+/* ========================================
+   フッター（固定配置）
+   ======================================== */
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.5rem;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 0, 0, 0.9) 30%,
+    rgba(0, 0, 0, 0.95)
+  );
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.footer button {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem 8rem;
+  }
+
+  .header {
+    padding: 1rem 0;
+  }
+
+  .section {
+    padding: 1rem;
+  }
+
+  .warningBox {
+    padding: 1rem;
+  }
+
+  .footer {
+    padding: 1rem;
+  }
+}

@@ -1,4 +1,4 @@
-import { WebPushSupportInfo } from '@/types/push';
+import { WebPushSupportInfo } from '@/_archive/types/push';
 
 export function checkWebPushSupport(): WebPushSupportInfo {
   const missingFeatures: string[] = [];

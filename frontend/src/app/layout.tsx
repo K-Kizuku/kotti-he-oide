@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Serif_JP } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,15 +19,22 @@ const notoSerifJP = Noto_Serif_JP({
   weight: ["400", "700"],
 });
 
+// 怨霊フォント（ホラー演出用）
+const onryouFont = localFont({
+  src: "../../public/fonts/onryou.ttf",
+  variable: "--font-onryou",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Kotti He Oide App",
-  description: "Web Push通知対応アプリケーション - カメラフィルターと通知機能を備えたPWAアプリ",
+  title: "赤煉瓦文化館 〜こっちにおいで〜",
+  description: "福岡市赤煉瓦文化館（現エンジニアカフェ）を舞台とした、体験型Webホラーゲーム",
   manifest: "/manifest.json",
   themeColor: "#000000",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "KottiApp",
+    statusBarStyle: "black-translucent",
+    title: "こっちにおいで",
   },
   icons: {
     icon: "/icons/icon-192.png",
@@ -61,7 +69,7 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#000000" />
         <meta name="msapplication-TileImage" content="/icons/icon-144.png" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} ${onryouFont.variable}`}>
         {children}
       </body>
     </html>
