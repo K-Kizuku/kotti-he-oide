@@ -1,0 +1,77 @@
+services:
+  # MySQL 8.0 データベース
+  db:
+    image: mysql:8.0
+    container_name: kotti-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kotti_game}
+      MYSQL_USER: ${MYSQL_USER:-kotti}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kottipassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - kotti-network
+
+  # マイグレーション実行
+  migrate:
+    image: migrate/migrate:latest
+    container_name: kotti-migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    command: >
+      -path=/migrations
+      -database "mysql://${MYSQL_USER:-kotti}:${MYSQL_PASSWORD:-kottipassword}@tcp(db:3306)/${MYSQL_DATABASE:-kotti_game}?parseTime=true"
+      up
+    networks:
+      - kotti-network
+
+  # Goアプリケーションサーバー
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kotti-api-server
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    environment:
+      - DATABASE_URL=${MYSQL_USER:-kotti}:${MYSQL_PASSWORD:-kottipassword}@tcp(db:3306)/${MYSQL_DATABASE:-kotti_game}?parseTime=true
+      - PORT=${PORT:-8080}
+      - SESSION_TTL_MINUTES=${SESSION_TTL_MINUTES:-60}
+      - VOICEVOX_API_URL=${VOICEVOX_API_URL:-http://host.docker.internal:50021}
+      - VOICEVOX_SPEAKER_ID=${VOICEVOX_SPEAKER_ID:-84}
+      - AUDIO_OUTPUT_DIR=${AUDIO_OUTPUT_DIR:-/app/audio_files}
+      - AUDIO_URL_PREFIX=${AUDIO_URL_PREFIX:-/audio}
+      - USE_S3_FOR_AUDIO=${USE_S3_FOR_AUDIO:-false}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-}
+      - S3_REGION=${S3_REGION:-ap-northeast-1}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY:-}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY:-}
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./audio_files:/app/audio_files
+    networks:
+      - kotti-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  kotti-network:
+    driver: bridge

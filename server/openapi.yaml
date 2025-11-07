@@ -42,6 +42,8 @@ tags:
     description: S6（存在証明書探索）進捗管理
   - name: Messages
     description: プレイヤーメッセージ管理
+  - name: Voice
+    description: 音声合成（VOICEVOX）
   - name: Push Notifications
     description: Web Push通知
 
@@ -482,6 +484,72 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/voice/generate:
+    post:
+      tags:
+        - Voice
+      summary: 音声生成
+      description: |
+        テキストから音声を生成します。VOICEVOX Engineを使用して、青山龍星（しっとり）の音声で合成します。
+        生成された音声ファイルは一時的にサーバーに保存され、URLが返されます。
+
+        **使用シーン**: S1（1942年パート）の担当者の音声として使用
+      operationId: generateVoice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateVoiceRequest'
+            examples:
+              BasicExample:
+                summary: 基本的な使用例
+                value:
+                  text: こんにちは、赤煉瓦文化館へようこそ。
+              WithSpeakerIdExample:
+                summary: Speaker IDを指定する例
+                value:
+                  text: 今日はいい天気ですね。
+                  speaker_id: 84
+      responses:
+        '200':
+          description: 音声生成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateVoiceResponse'
+              examples:
+                SuccessExample:
+                  summary: 成功レスポンス
+                  value:
+                    audio_url: /audio/abc123def456_1699999999.wav
+        '400':
+          description: 不正なリクエスト（テキストが空など）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceErrorResponse'
+              examples:
+                EmptyTextError:
+                  summary: テキストが空の場合
+                  value:
+                    error: EMPTY_TEXT
+                    message: Text is required
+                    details: ""
+        '500':
+          description: 音声生成エラー（VOICEVOXサーバーとの通信エラーなど）
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceErrorResponse'
+              examples:
+                VoicevoxError:
+                  summary: VOICEVOX通信エラー
+                  value:
+                    error: VOICE_GENERATION_FAILED
+                    message: Failed to generate voice
+                    details: failed to create audio query
+
 components:
   parameters:
     SessionIdParam:
@@ -838,6 +906,67 @@ components:
         message:
           type: string
           example: Push notification sent successfully
+
+    # Voice (VOICEVOX)
+    GenerateVoiceRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          description: 音声化するテキスト
+          example: こんにちは、赤煉瓦文化館へようこそ。私は担当者の青山と申します。
+        speaker_id:
+          type: integer
+          minimum: 0
+          description: |
+            Speaker ID（オプション）。指定しない場合はデフォルト値（84: 青山龍星しっとり）を使用します。
+
+            **主要なSpeaker ID**:
+            - 84: 青山龍星（しっとり）- デフォルト
+          nullable: true
+          example: 84
+
+    GenerateVoiceResponse:
+      type: object
+      required:
+        - audio_url
+      properties:
+        audio_url:
+          type: string
+          format: uri-reference
+          description: |
+            生成された音声ファイルのURL。このURLにアクセスすることで音声ファイル（WAV形式）を取得できます。
+
+            **例**: `/audio/abc123def456_1699999999.wav`
+
+            完全なURL: `http://localhost:8080/audio/abc123def456_1699999999.wav`
+          example: /audio/abc123def456_1699999999.wav
+
+    VoiceErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: エラーコード
+          enum:
+            - EMPTY_TEXT
+            - INVALID_REQUEST
+            - VOICE_GENERATION_FAILED
+          example: VOICE_GENERATION_FAILED
+        message:
+          type: string
+          description: エラーメッセージ
+          example: Failed to generate voice
+        details:
+          type: string
+          description: 詳細なエラー情報（オプション）
+          example: failed to create audio query
 
     # Error Response
     ErrorResponse:
