@@ -4,119 +4,67 @@ import (
 	"time"
 
 	"github.com/K-Kizuku/kotti-he-oide/internal/domain/valueobject"
+	"github.com/K-Kizuku/kotti-he-oide/pkg/errors"
 )
 
+// PushSubscription は、プッシュ通知のサブスクリプション情報を表すドメインモデル
 type PushSubscription struct {
-	id             valueobject.SubscriptionID
-	userID         *valueobject.UserID
-	endpoint       valueobject.PushEndpoint
-	keys           valueobject.PushKeys
-	userAgent      string
-	expirationTime *time.Time
-	isValid        bool
-	createdAt      time.Time
-	updatedAt      time.Time
+	SubscriptionID valueobject.SubscriptionID
+	SessionID      valueobject.SessionID
+	Endpoint       valueobject.PushEndpoint
+	Keys           valueobject.PushKeys
+	IsActive       bool
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
+// NewPushSubscription は、新しいプッシュ通知サブスクリプションを作成する
 func NewPushSubscription(
-	id valueobject.SubscriptionID,
-	userID *valueobject.UserID,
+	sessionID valueobject.SessionID,
 	endpoint valueobject.PushEndpoint,
 	keys valueobject.PushKeys,
-	userAgent string,
-	expirationTime *time.Time,
 ) *PushSubscription {
 	now := time.Now()
 	return &PushSubscription{
-		id:             id,
-		userID:         userID,
-		endpoint:       endpoint,
-		keys:           keys,
-		userAgent:      userAgent,
-		expirationTime: expirationTime,
-		isValid:        true,
-		createdAt:      now,
-		updatedAt:      now,
+		SubscriptionID: valueobject.NewSubscriptionID(),
+		SessionID:      sessionID,
+		Endpoint:       endpoint,
+		Keys:           keys,
+		IsActive:       true,
+		CreatedAt:      now,
+		UpdatedAt:      now,
 	}
 }
 
-func ReconstructPushSubscription(
-	id valueobject.SubscriptionID,
-	userID *valueobject.UserID,
-	endpoint valueobject.PushEndpoint,
-	keys valueobject.PushKeys,
-	userAgent string,
-	expirationTime *time.Time,
-	isValid bool,
-	createdAt, updatedAt time.Time,
-) *PushSubscription {
-	return &PushSubscription{
-		id:             id,
-		userID:         userID,
-		endpoint:       endpoint,
-		keys:           keys,
-		userAgent:      userAgent,
-		expirationTime: expirationTime,
-		isValid:        isValid,
-		createdAt:      createdAt,
-		updatedAt:      updatedAt,
+// Deactivate は、サブスクリプションを無効化する（404/410エラー時など）
+func (s *PushSubscription) Deactivate() error {
+	if !s.IsActive {
+		return errors.NewDomainError(
+			errors.INVALID_STATE,
+			"subscription is already inactive",
+			nil,
+		)
 	}
+	s.IsActive = false
+	s.UpdatedAt = time.Now()
+	return nil
 }
 
-func (ps *PushSubscription) ID() valueobject.SubscriptionID {
-	return ps.id
-}
-
-func (ps *PushSubscription) UserID() *valueobject.UserID {
-	return ps.userID
-}
-
-func (ps *PushSubscription) Endpoint() valueobject.PushEndpoint {
-	return ps.endpoint
-}
-
-func (ps *PushSubscription) Keys() valueobject.PushKeys {
-	return ps.keys
-}
-
-func (ps *PushSubscription) UserAgent() string {
-	return ps.userAgent
-}
-
-func (ps *PushSubscription) ExpirationTime() *time.Time {
-	return ps.expirationTime
-}
-
-func (ps *PushSubscription) IsValid() bool {
-	return ps.isValid
-}
-
-func (ps *PushSubscription) CreatedAt() time.Time {
-	return ps.createdAt
-}
-
-func (ps *PushSubscription) UpdatedAt() time.Time {
-	return ps.updatedAt
-}
-
-func (ps *PushSubscription) MarkAsInvalid() {
-	ps.isValid = false
-	ps.updatedAt = time.Now()
-}
-
-func (ps *PushSubscription) IsExpired() bool {
-	if ps.expirationTime == nil {
-		return false
+// Reactivate は、サブスクリプションを再有効化する
+func (s *PushSubscription) Reactivate() error {
+	if s.IsActive {
+		return errors.NewDomainError(
+			errors.INVALID_STATE,
+			"subscription is already active",
+			nil,
+		)
 	}
-	return time.Now().After(*ps.expirationTime)
+	s.IsActive = true
+	s.UpdatedAt = time.Now()
+	return nil
 }
 
-func (ps *PushSubscription) UpdateKeys(keys valueobject.PushKeys) {
-	ps.keys = keys
-	ps.updatedAt = time.Now()
-}
-
-func (ps *PushSubscription) UpdateUserAgent(userAgent string) {
-	ps.userAgent = userAgent
-	ps.updatedAt = time.Now()
+// CanReceivePush は、プッシュ通知を受信可能かどうかを判定する
+func (s *PushSubscription) CanReceivePush() bool {
+	return s.IsActive
 }

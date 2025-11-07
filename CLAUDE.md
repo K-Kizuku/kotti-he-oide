@@ -137,12 +137,6 @@
 
 ## New Features
 
-### Web Push Notification System
-- RFC 8030/8291/8292 compliant Web Push implementation
-- VAPID authentication and message encryption
-- PostgreSQL-based subscription management, job queue, and logging
-- Asynchronous sending workers with retry mechanisms
-
 ### Camera Filter Feature
 - Real-time browser camera video processing
 - 5 filter types (retro/horror/serious/VHS/comic)
@@ -243,20 +237,8 @@ terraform destroy    # Destroy infrastructure resources
 - リクエスト：`multipart/form-data`（画像 + place_id）
 - レスポンス：`{"verified": true/false, "similarity": 0.0-1.0}`
 
-#### ユーザー管理（既存）
-- `GET /health` - Health check
-- `GET /api/users` - Get all users
-- `POST /api/users` - Create user
-- `GET /api/users/{id}` - Get user by ID
-- `DELETE /api/users/{id}` - Delete user
-
-### Web Push API Endpoints (Planned)
-- `POST /api/push/subscribe` - Register push subscription
-- `DELETE /api/push/subscriptions/{id}` - Unsubscribe
-- `GET /api/push/vapid-public-key` - Get VAPID public key
-- `POST /api/push/send` - Send notification (admin)
-- `POST /api/push/send/batch` - Batch send notifications
-- `POST /api/push/click` - Track notification clicks
+#### ヘルスチェック
+- `GET /api/healthz` - ヘルスチェック
 
 ### Frontend Routes
 - `/` - ゲーム起動ページ（QRコードからのランディング）
@@ -287,7 +269,7 @@ infra/
 ├── ecs_services_web.tf     # Web service configuration
 ├── outputs.tf              # Terraform outputs
 ├── providers.tf            # AWS and Random providers
-├── rds.tf                  # RDS PostgreSQL database
+├── rds.tf                  # RDS MySQL 8.0 database
 ├── s3.tf                   # S3 bucket configuration
 ├── security.tf             # Security groups and IAM roles
 ├── variables.tf            # Input variables
@@ -302,7 +284,7 @@ infra/
   - EC2 instance for VOICEVOX server (音声生成専用)
 - **Load Balancing**: Application Load Balancer (ALB) with path-based routing
 - **Container Registry**: ECR repositories for API and Web images
-- **Database**: RDS PostgreSQL instance
+- **Database**: RDS MySQL 8.0 instance
 - **Storage**:
   - S3 bucket for static assets
   - S3 bucket for generated voice files (VOICEVOX output)
@@ -322,7 +304,8 @@ infra/
 
 - **Frontend**: React 19.1.0, Next.js 15.5.2, TypeScript 5+, ESLint 9
 - **Backend**: Go 1.25.1, Standard library HTTP server, DDD + Clean Architecture
-- **Infrastructure**: AWS ECS Fargate, ALB, RDS PostgreSQL, ECR, S3, EC2 (VOICEVOX), Terraform ~> 5.0
+- **Infrastructure**: AWS ECS Fargate, ALB, RDS MySQL 8.0, ECR, S3, EC2 (VOICEVOX), Terraform ~> 5.0
+- **Database**: MySQL 8.0 (go-sql-driver/mysql), golang-migrate for migrations
 - **Package Manager**: pnpm (frontend)
 - **Build Tool**: Turbopack (Next.js)
 - **CI/CD**: GitHub Actions (ECR/ECS auto-deployment)
@@ -333,10 +316,9 @@ infra/
 ## Key Libraries
 
 ### Backend
-- **Web Push**: `github.com/SherClockHolmes/webpush-go` v1.4.0
-- **JWT**: `github.com/golang-jwt/jwt/v5` v5.2.1  
-- **PostgreSQL**: `github.com/jackc/pgx/v5` v5.7.5
-- **DI**: `github.com/google/wire` v0.7.0
+- **MySQL Driver**: `github.com/go-sql-driver/mysql` v1.8.1
+- **UUID Generation**: `github.com/google/uuid` v1.6.0
+- **gRPC**: `google.golang.org/grpc` v1.65.0 (VOICEVOX/画像認識統合用)
 
 ### Frontend
 - **Camera Processing**: Canvas 2D API, getUserMedia
@@ -426,22 +408,22 @@ make lint    # Must pass without errors
 
 ## Database Schema
 
-プロジェクトには包括的なPostgreSQLスキーマ（`server/schema.sql`）が含まれています：
+プロジェクトにはMySQL 8.0用のマイグレーションファイル（`server/migrations/`）が含まれています：
 
 ### ゲーム関連テーブル
-- **sessions**: ゲームセッション管理（session_id, 作成時刻, 有効期限, 現在のシーン）
+- **sessions**: ゲームセッション管理（session_id CHAR(36), current_scene, s6_started_at, created_at, expires_at）
 - **session_answers**: S4の内省質問への回答（session_id, question_id, answer_text, answered_at）
 - **session_s6_progress**: S6の探索進捗（session_id, place_id, verified_by, quiz_id, answered, correct）
 - **player_messages**: プレイヤーが刻んだメッセージ（session_id（匿名化）, message_text, place_id, created_at）
-- **quiz_questions**: 生成されたクイズ（session_id, place_id, question_text, options, answer_index）
+- **quiz_questions**: 生成されたクイズ（quiz_id, session_id, place_id, question_text, option_1-4, answer_index）
 - **location_images**: 場所の基準画像（place_id, image_data, created_at）
 
-### 既存テーブル
-- User management
-- Web Push subscriptions with VAPID support
-- Notification templates and user preferences
-- Asynchronous job queue for push notifications
-- Delivery logs and analytics
+### データベース特徴
+- UUIDは CHAR(36) として保存（MySQL 8.0互換）
+- タイムスタンプは DATETIME 型を使用
+- 文字セット：utf8mb4（絵文字対応）
+- エンジン：InnoDB（トランザクションサポート）
+- マイグレーション管理：golang-migrate
 
 ## CI/CD Pipeline
 

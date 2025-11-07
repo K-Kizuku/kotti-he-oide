@@ -1,108 +1,66 @@
 package model
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/K-Kizuku/kotti-he-oide/internal/domain/valueobject"
 )
 
+// PushLog は、プッシュ通知送信ログを表すドメインモデル
 type PushLog struct {
-	id              int64
-	jobID           *valueobject.JobID
-	subscriptionID  *valueobject.SubscriptionID
-	responseStatus  *int
-	responseHeaders map[string]string
-	errorMessage    string
-	createdAt       time.Time
+	ID             int64
+	SubscriptionID valueobject.SubscriptionID
+	SessionID      valueobject.SessionID
+	Title          string
+	Message        string
+	Success        bool
+	StatusCode     int
+	ErrorMessage   string
+	SentAt         time.Time
 }
 
+// NewPushLog は、新しいプッシュ通知送信ログを作成する（成功時）
 func NewPushLog(
-	id int64,
-	jobID *valueobject.JobID,
-	subscriptionID *valueobject.SubscriptionID,
-	responseStatus *int,
-	responseHeaders map[string]string,
+	subscriptionID valueobject.SubscriptionID,
+	sessionID valueobject.SessionID,
+	title string,
+	message string,
+	statusCode int,
+) *PushLog {
+	return &PushLog{
+		SubscriptionID: subscriptionID,
+		SessionID:      sessionID,
+		Title:          title,
+		Message:        message,
+		Success:        true,
+		StatusCode:     statusCode,
+		ErrorMessage:   "",
+		SentAt:         time.Now(),
+	}
+}
+
+// NewPushLogWithError は、新しいプッシュ通知送信ログを作成する（失敗時）
+func NewPushLogWithError(
+	subscriptionID valueobject.SubscriptionID,
+	sessionID valueobject.SessionID,
+	title string,
+	message string,
+	statusCode int,
 	errorMessage string,
 ) *PushLog {
 	return &PushLog{
-		id:              id,
-		jobID:           jobID,
-		subscriptionID:  subscriptionID,
-		responseStatus:  responseStatus,
-		responseHeaders: responseHeaders,
-		errorMessage:    errorMessage,
-		createdAt:       time.Now(),
+		SubscriptionID: subscriptionID,
+		SessionID:      sessionID,
+		Title:          title,
+		Message:        message,
+		Success:        false,
+		StatusCode:     statusCode,
+		ErrorMessage:   errorMessage,
+		SentAt:         time.Now(),
 	}
 }
 
-func ReconstructPushLog(
-	id int64,
-	jobID *valueobject.JobID,
-	subscriptionID *valueobject.SubscriptionID,
-	responseStatus *int,
-	responseHeaders map[string]string,
-	errorMessage string,
-	createdAt time.Time,
-) *PushLog {
-	return &PushLog{
-		id:              id,
-		jobID:           jobID,
-		subscriptionID:  subscriptionID,
-		responseStatus:  responseStatus,
-		responseHeaders: responseHeaders,
-		errorMessage:    errorMessage,
-		createdAt:       createdAt,
-	}
-}
-
-func (pl *PushLog) ID() int64 {
-	return pl.id
-}
-
-func (pl *PushLog) JobID() *valueobject.JobID {
-	return pl.jobID
-}
-
-func (pl *PushLog) SubscriptionID() *valueobject.SubscriptionID {
-	return pl.subscriptionID
-}
-
-func (pl *PushLog) ResponseStatus() *int {
-	return pl.responseStatus
-}
-
-func (pl *PushLog) ResponseHeaders() map[string]string {
-	return pl.responseHeaders
-}
-
-func (pl *PushLog) ErrorMessage() string {
-	return pl.errorMessage
-}
-
-func (pl *PushLog) CreatedAt() time.Time {
-	return pl.createdAt
-}
-
-func (pl *PushLog) IsSuccess() bool {
-	if pl.responseStatus == nil {
-		return false
-	}
-	status := *pl.responseStatus
-	return status >= 200 && status < 300
-}
-
-func (pl *PushLog) IsSubscriptionExpired() bool {
-	if pl.responseStatus == nil {
-		return false
-	}
-	status := *pl.responseStatus
-	return status == 404 || status == 410
-}
-
-func (pl *PushLog) ResponseHeadersJSON() ([]byte, error) {
-	if pl.responseHeaders == nil {
-		return []byte("{}"), nil
-	}
-	return json.Marshal(pl.responseHeaders)
+// IsSubscriptionGone は、サブスクリプションが無効になっているかを判定する（404/410エラー）
+func (l *PushLog) IsSubscriptionGone() bool {
+	return !l.Success && (l.StatusCode == 404 || l.StatusCode == 410)
 }

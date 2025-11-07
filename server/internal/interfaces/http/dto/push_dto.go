@@ -1,75 +1,34 @@
 package dto
 
-import "time"
-
+// SubscribeRequest は、プッシュ通知サブスクリプション登録リクエスト
 type SubscribeRequest struct {
-	Endpoint       string   `json:"endpoint" validate:"required,url"`
-	Keys           PushKeys `json:"keys" validate:"required"`
-	UserAgent      string   `json:"ua,omitempty"`
-	ExpirationTime *int64   `json:"expirationTime,omitempty"`
+	SessionID string `json:"session_id"` // セッションID
+	Endpoint  string `json:"endpoint"`   // プッシュエンドポイントURL
+	Keys      struct {
+		P256dh string `json:"p256dh"` // P256dh公開鍵（Base64）
+		Auth   string `json:"auth"`   // 認証シークレット（Base64）
+	} `json:"keys"`
 }
 
-type PushKeys struct {
-	P256dh string `json:"p256dh" validate:"required"`
-	Auth   string `json:"auth" validate:"required"`
-}
-
+// SubscribeResponse は、プッシュ通知サブスクリプション登録レスポンス
 type SubscribeResponse struct {
-	ID      string `json:"id"`
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+	SubscriptionID string `json:"subscription_id"` // サブスクリプションID
+	Message        string `json:"message"`         // メッセージ
 }
 
-type UnsubscribeRequest struct {
-	ID string `json:"id" validate:"required"`
+// SendPushRequest は、プッシュ通知送信リクエスト
+type SendPushRequest struct {
+	Title   string `json:"title"`   // 通知タイトル
+	Message string `json:"message"` // 通知メッセージ
 }
 
-type UnsubscribeResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+// SendPushResponse は、プッシュ通知送信レスポンス
+type SendPushResponse struct {
+	Success bool   `json:"success"` // 成功フラグ
+	Message string `json:"message"` // メッセージ
 }
 
-type SendNotificationRequest struct {
-	UserID         *string                `json:"userId,omitempty"`
-	IdempotencyKey string                 `json:"idempotencyKey,omitempty"`
-	Topic          string                 `json:"topic,omitempty"`
-	Urgency        string                 `json:"urgency,omitempty"`
-	TTL            int                    `json:"ttl,omitempty"`
-	Payload        map[string]interface{} `json:"payload" validate:"required"`
-	ScheduleAt     *time.Time             `json:"scheduleAt,omitempty"`
-}
-
-type SendNotificationResponse struct {
-	JobID   string `json:"jobId"`
-	Success bool   `json:"success"`
-	Message string `json:"message"`
-}
-
-type SendBatchNotificationRequest struct {
-	UserIDs        []string               `json:"userIds" validate:"required,min=1"`
-	Topic          string                 `json:"topic,omitempty"`
-	Urgency        string                 `json:"urgency,omitempty"`
-	TTL            int                    `json:"ttl,omitempty"`
-	Payload        map[string]interface{} `json:"payload" validate:"required"`
-	ScheduleAt     *time.Time             `json:"scheduleAt,omitempty"`
-	IdempotencyKey string                 `json:"idempotencyKey,omitempty"`
-}
-
-type SendBatchNotificationResponse struct {
-	JobIDs  []string `json:"jobIds"`
-	Success bool     `json:"success"`
-	Message string   `json:"message"`
-}
-
+// VAPIDPublicKeyResponse は、VAPID公開鍵取得レスポンス
 type VAPIDPublicKeyResponse struct {
-	PublicKey string `json:"publicKey"`
-	Success   bool   `json:"success"`
-	Message   string `json:"message"`
-}
-
-type ClickTrackingRequest struct {
-	SubscriptionID string `json:"subscriptionId,omitempty"`
-	JobID          string `json:"jobId,omitempty"`
-	URL            string `json:"url,omitempty"`
-	Timestamp      int64  `json:"timestamp"`
+	PublicKey string `json:"public_key"` // VAPID公開鍵（Base64 URL-safe）
 }

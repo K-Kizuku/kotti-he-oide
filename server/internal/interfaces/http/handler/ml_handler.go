@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-    pb "github.com/K-Kizuku/kotti-he-oide/internal/gen/image_recognition/v1"
+	pb "github.com/K-Kizuku/kotti-he-oide/internal/gen/image_recognition/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
