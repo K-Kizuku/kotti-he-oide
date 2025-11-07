@@ -1,63 +1,56 @@
 package valueobject
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/K-Kizuku/kotti-he-oide/pkg/errors"
 )
 
+// PushEndpoint は、プッシュ通知のエンドポイントURLを表すValue Object
 type PushEndpoint struct {
 	value string
 }
 
+// NewPushEndpoint は、新しいPushEndpointを作成する
 func NewPushEndpoint(endpoint string) (PushEndpoint, error) {
-	if endpoint == "" {
-		return PushEndpoint{}, fmt.Errorf("endpoint cannot be empty")
+	// 空文字列チェック
+	if strings.TrimSpace(endpoint) == "" {
+		return PushEndpoint{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"push endpoint cannot be empty",
+			nil,
+		)
 	}
 
-	// Validate URL format
+	// URLフォーマットの検証
 	parsedURL, err := url.Parse(endpoint)
 	if err != nil {
-		return PushEndpoint{}, fmt.Errorf("invalid endpoint URL: %w", err)
+		return PushEndpoint{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"invalid push endpoint URL format",
+			err,
+		)
 	}
 
-	// Check if it's HTTPS (required for Web Push)
-	if parsedURL.Scheme != "https" {
-		return PushEndpoint{}, fmt.Errorf("endpoint must use HTTPS")
-	}
-
-	// Check if it's from a known push service provider
-	host := strings.ToLower(parsedURL.Host)
-	validProviders := []string{
-		"fcm.googleapis.com",
-		"android.googleapis.com",
-		"updates.push.services.mozilla.com",
-		"web.push.apple.com",
-	}
-
-	isValid := false
-	for _, provider := range validProviders {
-		if strings.Contains(host, provider) {
-			isValid = true
-			break
-		}
-	}
-
-	if !isValid {
-		return PushEndpoint{}, fmt.Errorf("unknown push service provider: %s", host)
+	// HTTPSスキームの検証（開発環境ではHTTPも許可）
+	if parsedURL.Scheme != "https" && parsedURL.Scheme != "http" {
+		return PushEndpoint{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"push endpoint must use HTTP or HTTPS scheme",
+			nil,
+		)
 	}
 
 	return PushEndpoint{value: endpoint}, nil
 }
 
-func (e PushEndpoint) Value() string {
-	return e.value
+// String は、PushEndpointを文字列として返す
+func (p PushEndpoint) String() string {
+	return p.value
 }
 
-func (e PushEndpoint) String() string {
-	return e.value
-}
-
-func (e PushEndpoint) Equals(other PushEndpoint) bool {
-	return e.value == other.value
+// Equals は、2つのPushEndpointが等しいかどうかを判定する
+func (p PushEndpoint) Equals(other PushEndpoint) bool {
+	return p.value == other.value
 }

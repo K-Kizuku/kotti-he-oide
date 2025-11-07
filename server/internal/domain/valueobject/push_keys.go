@@ -2,89 +2,75 @@ package valueobject
 
 import (
 	"encoding/base64"
-	"fmt"
+	"strings"
+
+	"github.com/K-Kizuku/kotti-he-oide/pkg/errors"
 )
 
-type P256dhKey struct {
-	value string
-}
-
-func NewP256dhKey(key string) (P256dhKey, error) {
-	if key == "" {
-		return P256dhKey{}, fmt.Errorf("p256dh key cannot be empty")
-	}
-
-	// Validate base64url encoding
-	_, err := base64.RawURLEncoding.DecodeString(key)
-	if err != nil {
-		return P256dhKey{}, fmt.Errorf("p256dh key must be valid base64url: %w", err)
-	}
-
-	return P256dhKey{value: key}, nil
-}
-
-func (k P256dhKey) Value() string {
-	return k.value
-}
-
-func (k P256dhKey) String() string {
-	return k.value
-}
-
-func (k P256dhKey) Equals(other P256dhKey) bool {
-	return k.value == other.value
-}
-
-type AuthKey struct {
-	value string
-}
-
-func NewAuthKey(key string) (AuthKey, error) {
-	if key == "" {
-		return AuthKey{}, fmt.Errorf("auth key cannot be empty")
-	}
-
-	// Validate base64url encoding
-	_, err := base64.RawURLEncoding.DecodeString(key)
-	if err != nil {
-		return AuthKey{}, fmt.Errorf("auth key must be valid base64url: %w", err)
-	}
-
-	return AuthKey{value: key}, nil
-}
-
-func (k AuthKey) Value() string {
-	return k.value
-}
-
-func (k AuthKey) String() string {
-	return k.value
-}
-
-func (k AuthKey) Equals(other AuthKey) bool {
-	return k.value == other.value
-}
-
+// PushKeys は、Web Push APIで使用されるP256dhキーとAuthキーを表すValue Object
 type PushKeys struct {
-	p256dh P256dhKey
-	auth   AuthKey
+	p256dh string // 公開鍵（Base64エンコード）
+	auth   string // 認証シークレット（Base64エンコード）
 }
 
-func NewPushKeys(p256dh P256dhKey, auth AuthKey) PushKeys {
+// NewPushKeys は、新しいPushKeysを作成する
+func NewPushKeys(p256dh, auth string) (PushKeys, error) {
+	// 空文字列チェック
+	if strings.TrimSpace(p256dh) == "" {
+		return PushKeys{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"p256dh key cannot be empty",
+			nil,
+		)
+	}
+	if strings.TrimSpace(auth) == "" {
+		return PushKeys{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"auth key cannot be empty",
+			nil,
+		)
+	}
+
+	// Base64エンコードの検証
+	if _, err := base64.StdEncoding.DecodeString(p256dh); err != nil {
+		// URL-safe Base64も試す
+		if _, err := base64.RawURLEncoding.DecodeString(p256dh); err != nil {
+			return PushKeys{}, errors.NewDomainError(
+				errors.INVALID_INPUT,
+				"p256dh key must be valid Base64",
+				err,
+			)
+		}
+	}
+
+	if _, err := base64.StdEncoding.DecodeString(auth); err != nil {
+		// URL-safe Base64も試す
+		if _, err := base64.RawURLEncoding.DecodeString(auth); err != nil {
+			return PushKeys{}, errors.NewDomainError(
+				errors.INVALID_INPUT,
+				"auth key must be valid Base64",
+				err,
+			)
+		}
+	}
+
 	return PushKeys{
 		p256dh: p256dh,
 		auth:   auth,
-	}
+	}, nil
 }
 
-func (k PushKeys) P256dh() P256dhKey {
+// P256dh は、P256dh公開鍵を返す
+func (k PushKeys) P256dh() string {
 	return k.p256dh
 }
 
-func (k PushKeys) Auth() AuthKey {
+// Auth は、認証シークレットを返す
+func (k PushKeys) Auth() string {
 	return k.auth
 }
 
+// Equals は、2つのPushKeysが等しいかどうかを判定する
 func (k PushKeys) Equals(other PushKeys) bool {
-	return k.p256dh.Equals(other.p256dh) && k.auth.Equals(other.auth)
+	return k.p256dh == other.p256dh && k.auth == other.auth
 }

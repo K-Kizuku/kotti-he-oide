@@ -7,15 +7,20 @@ import (
 	"github.com/K-Kizuku/kotti-he-oide/internal/domain/valueobject"
 )
 
+// PushSubscriptionRepository は、プッシュ通知サブスクリプションの永続化を担当するリポジトリインターフェース
 type PushSubscriptionRepository interface {
+	// Save は、サブスクリプションを保存する
 	Save(ctx context.Context, subscription *model.PushSubscription) error
-	FindByID(ctx context.Context, id valueobject.SubscriptionID) (*model.PushSubscription, error)
-	FindByEndpoint(ctx context.Context, endpoint valueobject.PushEndpoint) (*model.PushSubscription, error)
-	FindByUserID(ctx context.Context, userID valueobject.UserID) ([]*model.PushSubscription, error)
-	FindValidSubscriptions(ctx context.Context) ([]*model.PushSubscription, error)
-	FindValidSubscriptionsByUserID(ctx context.Context, userID valueobject.UserID) ([]*model.PushSubscription, error)
-	MarkAsInvalid(ctx context.Context, id valueobject.SubscriptionID) error
-	DeleteExpiredSubscriptions(ctx context.Context) error
-	Delete(ctx context.Context, id valueobject.SubscriptionID) error
-	NextIdentity(ctx context.Context) (valueobject.SubscriptionID, error)
+
+	// FindByID は、サブスクリプションIDでサブスクリプションを検索する
+	FindByID(ctx context.Context, subscriptionID valueobject.SubscriptionID) (*model.PushSubscription, error)
+
+	// FindBySessionID は、セッションIDに紐づくアクティブなサブスクリプションを検索する
+	FindBySessionID(ctx context.Context, sessionID valueobject.SessionID) (*model.PushSubscription, error)
+
+	// Update は、サブスクリプションを更新する
+	Update(ctx context.Context, subscription *model.PushSubscription) error
+
+	// Delete は、サブスクリプションを削除する
+	Delete(ctx context.Context, subscriptionID valueobject.SubscriptionID) error
 }

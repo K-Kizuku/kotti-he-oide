@@ -4,92 +4,118 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
-	"time"
 
-	"github.com/K-Kizuku/kotti-he-oide/internal/application/service"
 	"github.com/K-Kizuku/kotti-he-oide/internal/application/usecase"
-	domainService "github.com/K-Kizuku/kotti-he-oide/internal/domain/service"
+	"github.com/K-Kizuku/kotti-he-oide/internal/domain/service"
+	"github.com/K-Kizuku/kotti-he-oide/internal/infrastructure/database"
 	"github.com/K-Kizuku/kotti-he-oide/internal/infrastructure/persistence"
 	"github.com/K-Kizuku/kotti-he-oide/internal/interfaces/http/handler"
+	"github.com/K-Kizuku/kotti-he-oide/pkg/config"
 )
 
 func main() {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
+	// 設定の読み込み
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal("Failed to load config:", err)
 	}
 
-	// User dependencies
-	userRepo := persistence.NewMemoryUserRepository()
-	userService := domainService.NewUserService(userRepo)
-	userUseCase := usecase.NewUserUseCase(userRepo, userService)
+	// データベース接続
+	ctx := context.Background()
+	db, err := database.NewMySQLDB(ctx, cfg.DatabaseURL)
+	if err != nil {
+		log.Fatal("Failed to connect to database:", err)
+	}
+	defer db.Close()
 
-	// Web Push dependencies (using memory repositories for now)
-	// TODO: Replace with actual PostgreSQL implementations
-	subscriptionRepo := persistence.NewMemoryPushSubscriptionRepository()
-	jobRepo := persistence.NewMemoryPushJobRepository()
-	logRepo := persistence.NewMemoryPushLogRepository()
+	// リポジトリの初期化
+	sessionRepo := persistence.NewMySQLSessionRepository(db)
+	sessionAnswerRepo := persistence.NewMySQLSessionAnswerRepository(db)
+	s6ProgressRepo := persistence.NewMySQLS6ProgressRepository(db)
+	quizRepo := persistence.NewMySQLQuizQuestionRepository(db)
+	messageRepo := persistence.NewMySQLPlayerMessageRepository(db)
+	pushSubscriptionRepo := persistence.NewMySQLPushSubscriptionRepository(db)
+	pushLogRepo := persistence.NewMySQLPushLogRepository(db)
 
-	// Initialize VAPID service
-	vapidService, err := domainService.NewVAPIDService()
+	// ドメインサービスの初期化
+	sessionService := service.NewSessionService(sessionRepo)
+	quizService := service.NewQuizService(sessionAnswerRepo, quizRepo)
+	s6Service := service.NewS6Service(s6ProgressRepo, sessionRepo)
+
+	// VAPID サービスの初期化
+	vapidService, err := service.NewVAPIDService()
 	if err != nil {
 		log.Fatal("Failed to initialize VAPID service:", err)
 	}
 
-	// Push services
-	pushService := domainService.NewPushService(subscriptionRepo, jobRepo)
-	pushSenderService := service.NewPushSenderService(subscriptionRepo, jobRepo, logRepo, vapidService)
+	// ユースケースの初期化
+	sessionUseCase := usecase.NewSessionUseCase(sessionRepo, sessionService, cfg.SessionTTLMinutes)
+	s4AnswerUseCase := usecase.NewS4AnswerUseCase(sessionAnswerRepo, sessionService)
+	s6UseCase := usecase.NewS6UseCase(s6ProgressRepo, quizService, s6Service, sessionService)
+	messageUseCase := usecase.NewMessageUseCase(messageRepo, sessionService)
+	pushNotificationUseCase := usecase.NewPushNotificationUseCase(pushSubscriptionRepo, pushLogRepo, vapidService)
 
-	// Use cases
-	pushSubscriptionUseCase := usecase.NewPushSubscriptionUseCase(subscriptionRepo, pushService)
-	pushNotificationUseCase := usecase.NewPushNotificationUseCase(jobRepo, subscriptionRepo, pushService)
-	vapidUseCase := usecase.NewVAPIDUseCase(vapidService)
-
-	// Handlers
+	// ハンドラーの初期化
 	healthHandler := handler.NewHealthHandler()
-	userHandler := handler.NewUserHandler(userUseCase)
-	pushSubscriptionHandler := handler.NewPushSubscriptionHandler(pushSubscriptionUseCase)
+	sessionHandler := handler.NewSessionHandler(sessionUseCase)
+	answerHandler := handler.NewAnswerHandler(s4AnswerUseCase)
+	s6Handler := handler.NewS6Handler(s6UseCase)
+	messageHandler := handler.NewMessageHandler(messageUseCase)
 	pushNotificationHandler := handler.NewPushNotificationHandler(pushNotificationUseCase)
-	vapidHandler := handler.NewVAPIDHandler(vapidUseCase)
-	mlHandler := handler.NewMLHandler()
 
-	// Background service for processing push jobs
-	go func() {
-		for {
-			if err := pushSenderService.ProcessPendingJobs(context.Background(), 100); err != nil {
-				log.Printf("Error processing pending jobs: %v", err)
-			}
-			if err := pushSenderService.ProcessRetries(context.Background(), 5, 50); err != nil {
-				log.Printf("Error processing retries: %v", err)
-			}
-			time.Sleep(30 * time.Second)
-		}
-	}()
-
+	// ルーティング設定
 	mux := http.NewServeMux()
+
+	// CORS対応（開発用）
+	corsHandler := enableCORS(mux)
 
 	// Health check
 	mux.HandleFunc("GET /api/healthz", healthHandler.HealthCheck)
 
-	// User API
-	mux.HandleFunc("GET /api/users", userHandler.GetUsers)
-	mux.HandleFunc("POST /api/users", userHandler.CreateUser)
-	mux.HandleFunc("GET /api/users/{id}", userHandler.GetUser)
-	mux.HandleFunc("DELETE /api/users/{id}", userHandler.DeleteUser)
+	// Session API
+	mux.HandleFunc("POST /api/session", sessionHandler.CreateSession)
+	mux.HandleFunc("GET /api/session/{session_id}", sessionHandler.GetSession)
+	mux.HandleFunc("POST /api/session/{session_id}/s6/start", sessionHandler.StartS6)
 
-	// Web Push API
-	mux.HandleFunc("GET /api/push/vapid-public-key", vapidHandler.GetPublicKey)
-	mux.HandleFunc("POST /api/push/subscribe", pushSubscriptionHandler.Subscribe)
-	mux.HandleFunc("DELETE /api/push/subscriptions/{id}", pushSubscriptionHandler.Unsubscribe)
-	mux.HandleFunc("POST /api/push/send", pushNotificationHandler.SendNotification)
-	mux.HandleFunc("POST /api/push/send/batch", pushNotificationHandler.SendBatchNotification)
+	// S4 Answer API
+	mux.HandleFunc("POST /api/session/{session_id}/answers", answerHandler.SaveAnswer)
+	mux.HandleFunc("GET /api/session/{session_id}/answers", answerHandler.GetAnswers)
 
-	// ML (gRPC 経由) API プロキシ
-	mux.HandleFunc("GET /api/ml/hello", mlHandler.HelloProxy)
+	// S6 Progress API
+	mux.HandleFunc("POST /api/session/{session_id}/s6/initialize", s6Handler.InitializeProgress)
+	mux.HandleFunc("POST /api/session/{session_id}/s6/verify-location", s6Handler.VerifyLocation)
+	mux.HandleFunc("GET /api/session/{session_id}/s6/quiz/{place_id}", s6Handler.GetQuiz)
+	mux.HandleFunc("POST /api/session/{session_id}/s6/answer", s6Handler.SubmitAnswer)
+	mux.HandleFunc("GET /api/session/{session_id}/s6/progress", s6Handler.GetProgress)
 
-	log.Printf("Server starting on port %s", port)
-	if err := http.ListenAndServe(":"+port, mux); err != nil {
+	// Message API
+	mux.HandleFunc("POST /api/session/{session_id}/message", messageHandler.SaveMessage)
+	mux.HandleFunc("GET /api/messages", messageHandler.GetMessages)
+
+	// Push Notification API
+	mux.HandleFunc("GET /api/push/vapid-public-key", pushNotificationHandler.GetVAPIDPublicKey)
+	mux.HandleFunc("POST /api/push/subscribe", pushNotificationHandler.Subscribe)
+	mux.HandleFunc("DELETE /api/push/subscriptions/{subscription_id}", pushNotificationHandler.Unsubscribe)
+	mux.HandleFunc("POST /api/push/send/{session_id}", pushNotificationHandler.SendPush)
+
+	log.Printf("Server starting on port %s", cfg.ServerPort)
+	if err := http.ListenAndServe(":"+cfg.ServerPort, corsHandler); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
+}
+
+// enableCORS は、CORSを有効にするミドルウェア
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

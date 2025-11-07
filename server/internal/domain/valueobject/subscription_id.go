@@ -1,37 +1,44 @@
 package valueobject
 
 import (
-	"fmt"
-	"strconv"
+	"github.com/K-Kizuku/kotti-he-oide/pkg/errors"
+	"github.com/google/uuid"
 )
 
+// SubscriptionID は、プッシュ通知サブスクリプションIDを表すValue Object
 type SubscriptionID struct {
-	value int64
+	value uuid.UUID
 }
 
-func NewSubscriptionID(value int64) (SubscriptionID, error) {
-	if value <= 0 {
-		return SubscriptionID{}, fmt.Errorf("subscription ID must be positive")
-	}
-	return SubscriptionID{value: value}, nil
+// NewSubscriptionID は、新しいSubscriptionIDを生成する
+func NewSubscriptionID() SubscriptionID {
+	return SubscriptionID{value: uuid.New()}
 }
 
-func SubscriptionIDFromString(s string) (SubscriptionID, error) {
-	value, err := strconv.ParseInt(s, 10, 64)
+// NewSubscriptionIDFromString は、文字列からSubscriptionIDを作成する
+func NewSubscriptionIDFromString(id string) (SubscriptionID, error) {
+	parsed, err := uuid.Parse(id)
 	if err != nil {
-		return SubscriptionID{}, fmt.Errorf("invalid subscription ID format: %w", err)
+		return SubscriptionID{}, errors.NewDomainError(
+			errors.INVALID_INPUT,
+			"invalid subscription ID format",
+			err,
+		)
 	}
-	return NewSubscriptionID(value)
+	return SubscriptionID{value: parsed}, nil
 }
 
-func (id SubscriptionID) Value() int64 {
-	return id.value
+// String は、SubscriptionIDを文字列として返す
+func (s SubscriptionID) String() string {
+	return s.value.String()
 }
 
-func (id SubscriptionID) String() string {
-	return strconv.FormatInt(id.value, 10)
+// UUID は、SubscriptionIDをUUIDとして返す
+func (s SubscriptionID) UUID() uuid.UUID {
+	return s.value
 }
 
-func (id SubscriptionID) Equals(other SubscriptionID) bool {
-	return id.value == other.value
+// Equals は、2つのSubscriptionIDが等しいかどうかを判定する
+func (s SubscriptionID) Equals(other SubscriptionID) bool {
+	return s.value == other.value
 }

@@ -5,140 +5,172 @@ import (
 	"net/http"
 
 	"github.com/K-Kizuku/kotti-he-oide/internal/application/usecase"
-	"github.com/K-Kizuku/kotti-he-oide/internal/domain/model"
 	"github.com/K-Kizuku/kotti-he-oide/internal/domain/valueobject"
 	"github.com/K-Kizuku/kotti-he-oide/internal/interfaces/http/dto"
 )
 
+// PushNotificationHandler は、プッシュ通知のHTTPハンドラー
 type PushNotificationHandler struct {
-	notificationUseCase *usecase.PushNotificationUseCase
+	pushNotificationUseCase usecase.PushNotificationUseCase
 }
 
-func NewPushNotificationHandler(notificationUseCase *usecase.PushNotificationUseCase) *PushNotificationHandler {
+// NewPushNotificationHandler は、新しいPushNotificationHandlerを作成する
+func NewPushNotificationHandler(pushNotificationUseCase usecase.PushNotificationUseCase) *PushNotificationHandler {
 	return &PushNotificationHandler{
-		notificationUseCase: notificationUseCase,
+		pushNotificationUseCase: pushNotificationUseCase,
 	}
 }
 
-func (pnh *PushNotificationHandler) SendNotification(w http.ResponseWriter, r *http.Request) {
-	var req dto.SendNotificationRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
-		return
-	}
+// GetVAPIDPublicKey は、VAPID公開鍵を取得する
+// GET /api/push/vapid-public-key
+func (h *PushNotificationHandler) GetVAPIDPublicKey(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-	var userID *valueobject.UserID
-	if req.UserID != nil && *req.UserID != "" {
-		parsedUserID, err := valueobject.UserIDFromString(*req.UserID)
-		if err != nil {
-			http.Error(w, "Invalid user ID", http.StatusBadRequest)
-			return
-		}
-		userID = &parsedUserID
-	}
-
-	urgency := model.Urgency(req.Urgency)
-	if urgency == "" {
-		urgency = model.UrgencyNormal
-	}
-
-	ttl := req.TTL
-	if ttl <= 0 {
-		ttl = 86400 // Default 24 hours
-	}
-
-	useCaseReq := usecase.SendPushRequest{
-		UserID:         userID,
-		IdempotencyKey: req.IdempotencyKey,
-		Topic:          req.Topic,
-		Urgency:        urgency,
-		TTLSeconds:     ttl,
-		Payload:        req.Payload,
-		ScheduleAt:     req.ScheduleAt,
-	}
-
-	result, err := pnh.notificationUseCase.SendPush(r.Context(), useCaseReq)
+	publicKey, err := h.pushNotificationUseCase.GetVAPIDPublicKey(ctx)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
-	response := dto.SendNotificationResponse{
-		JobID:   result.JobID.String(),
-		Success: result.Success,
-		Message: result.Message,
+	response := dto.VAPIDPublicKeyResponse{
+		PublicKey: publicKey,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if result.Success {
-		w.WriteHeader(http.StatusCreated)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-
-	json.NewEncoder(w).Encode(response)
+	respondJSON(w, http.StatusOK, response)
 }
 
-func (pnh *PushNotificationHandler) SendBatchNotification(w http.ResponseWriter, r *http.Request) {
-	var req dto.SendBatchNotificationRequest
+// Subscribe は、プッシュ通知のサブスクリプションを登録する
+// POST /api/push/subscribe
+func (h *PushNotificationHandler) Subscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req dto.SubscribeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_REQUEST",
+			"message": "Invalid request body",
+		})
 		return
 	}
 
-	var userIDs []valueobject.UserID
-	for _, userIDStr := range req.UserIDs {
-		userID, err := valueobject.UserIDFromString(userIDStr)
-		if err != nil {
-			http.Error(w, "Invalid user ID: "+userIDStr, http.StatusBadRequest)
-			return
-		}
-		userIDs = append(userIDs, userID)
+	// バリデーション
+	if req.SessionID == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_INPUT",
+			"message": "session_id is required",
+		})
+		return
 	}
 
-	urgency := model.Urgency(req.Urgency)
-	if urgency == "" {
-		urgency = model.UrgencyNormal
+	if req.Endpoint == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_INPUT",
+			"message": "endpoint is required",
+		})
+		return
 	}
 
-	ttl := req.TTL
-	if ttl <= 0 {
-		ttl = 86400 // Default 24 hours
+	if req.Keys.P256dh == "" || req.Keys.Auth == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_INPUT",
+			"message": "keys (p256dh and auth) are required",
+		})
+		return
 	}
 
-	useCaseReq := usecase.SendBatchPushRequest{
-		UserIDs:        userIDs,
-		Topic:          req.Topic,
-		Urgency:        urgency,
-		TTLSeconds:     ttl,
-		Payload:        req.Payload,
-		ScheduleAt:     req.ScheduleAt,
-		IdempotencyKey: req.IdempotencyKey,
-	}
-
-	result, err := pnh.notificationUseCase.SendBatchPush(r.Context(), useCaseReq)
+	// SessionIDをValue Objectに変換
+	sessionID, err := valueobject.NewSessionIDFromString(req.SessionID)
 	if err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		handleError(w, err)
 		return
 	}
 
-	jobIDStrings := make([]string, len(result.JobIDs))
-	for i, jobID := range result.JobIDs {
-		jobIDStrings[i] = jobID.String()
+	// サブスクリプション登録
+	subscription, err := h.pushNotificationUseCase.Subscribe(
+		ctx,
+		sessionID,
+		req.Endpoint,
+		req.Keys.P256dh,
+		req.Keys.Auth,
+	)
+
+	if err != nil {
+		handleError(w, err)
+		return
 	}
 
-	response := dto.SendBatchNotificationResponse{
-		JobIDs:  jobIDStrings,
-		Success: result.Success,
-		Message: result.Message,
+	response := dto.SubscribeResponse{
+		SubscriptionID: subscription.SubscriptionID.String(),
+		Message:        "Push notification subscription created successfully",
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if result.Success {
-		w.WriteHeader(http.StatusCreated)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
+	respondJSON(w, http.StatusCreated, response)
+}
+
+// Unsubscribe は、プッシュ通知のサブスクリプションを削除する
+// DELETE /api/push/subscriptions/{subscription_id}
+func (h *PushNotificationHandler) Unsubscribe(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	subscriptionIDStr := r.PathValue("subscription_id")
+
+	subscriptionID, err := valueobject.NewSubscriptionIDFromString(subscriptionIDStr)
+	if err != nil {
+		handleError(w, err)
+		return
 	}
 
-	json.NewEncoder(w).Encode(response)
+	if err := h.pushNotificationUseCase.Unsubscribe(ctx, subscriptionID); err != nil {
+		handleError(w, err)
+		return
+	}
+
+	respondJSON(w, http.StatusOK, map[string]string{
+		"message": "Push notification subscription deleted successfully",
+	})
+}
+
+// SendPush は、特定のセッションに即時プッシュ通知を送信する
+// POST /api/push/send/{session_id}
+func (h *PushNotificationHandler) SendPush(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	sessionIDStr := r.PathValue("session_id")
+
+	// SessionIDをValue Objectに変換
+	sessionID, err := valueobject.NewSessionIDFromString(sessionIDStr)
+	if err != nil {
+		handleError(w, err)
+		return
+	}
+
+	// リクエストボディをパース
+	var req dto.SendPushRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_REQUEST",
+			"message": "Invalid request body",
+		})
+		return
+	}
+
+	// バリデーション
+	if req.Message == "" {
+		respondJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "INVALID_INPUT",
+			"message": "message is required",
+		})
+		return
+	}
+
+	// プッシュ通知送信
+	if err := h.pushNotificationUseCase.SendPushNotification(ctx, sessionID, req.Title, req.Message); err != nil {
+		handleError(w, err)
+		return
+	}
+
+	response := dto.SendPushResponse{
+		Success: true,
+		Message: "Push notification sent successfully",
+	}
+
+	respondJSON(w, http.StatusOK, response)
 }
