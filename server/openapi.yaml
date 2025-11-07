@@ -1,0 +1,938 @@
+openapi: 3.0.3
+info:
+  title: 赤煉瓦文化館ホラーゲーム REST API
+  description: |
+    福岡市赤煉瓦文化館を舞台とした体験型Webホラーゲーム「こっちにおいで」のREST APIです。
+
+    ## 認証方式
+    セッションベース認証を使用します。
+    1. `POST /api/session` で新規セッションを作成
+    2. レスポンスの `session_id` を取得
+    3. 以降のリクエストでURLパスパラメータとして指定
+
+    ## セッション有効期限
+    - 作成時刻から60分間有効
+    - 有効期限切れ後は `410 Gone` エラー
+
+    ## ゲームフロー
+    S0（起動）→ S1（1942年パート）→ S2（お気に入りの場所）→ S3（移動指示）→
+    S4（診査室・内省10問）→ S5（死亡届受理）→ S6（存在証明書探索・7分）→
+    S7（2002年パート）→ S8（メインホール探索）→ S9（メッセージ刻み）
+  version: 1.0.0
+  contact:
+    name: Kotti He Oide Team
+    url: https://github.com/K-Kizuku/kotti-he-oide
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+  - url: https://api.kotti-he-oide.com
+    description: Production server (予定)
+
+tags:
+  - name: Health
+    description: ヘルスチェック
+  - name: Session
+    description: セッション管理
+  - name: S4 Answers
+    description: S4（診査室）回答管理
+  - name: S6 Progress
+    description: S6（存在証明書探索）進捗管理
+  - name: Messages
+    description: プレイヤーメッセージ管理
+  - name: Push Notifications
+    description: Web Push通知
+
+paths:
+  /api/healthz:
+    get:
+      tags:
+        - Health
+      summary: ヘルスチェック
+      description: サーバーの稼働状態を確認します
+      operationId: healthCheck
+      responses:
+        '200':
+          description: サーバー稼働中
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  message:
+                    type: string
+                    example: Server is running
+
+  /api/session:
+    post:
+      tags:
+        - Session
+      summary: 新規セッション作成
+      description: 新しいゲームセッションを作成します。UUID v4形式のセッションIDが発行されます。
+      operationId: createSession
+      responses:
+        '201':
+          description: セッション作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/session/{session_id}:
+    get:
+      tags:
+        - Session
+      summary: セッション情報取得
+      description: 指定されたセッションの詳細情報を取得します
+      operationId: getSession
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '200':
+          description: セッション情報取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+        '410':
+          $ref: '#/components/responses/SessionExpired'
+
+  /api/session/{session_id}/s6/start:
+    post:
+      tags:
+        - Session
+      summary: S6開始
+      description: S6（存在証明書探索パート）を開始し、7分タイマーを開始します
+      operationId: startS6
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '200':
+          description: S6開始成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: S6 started successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+        '410':
+          $ref: '#/components/responses/SessionExpired'
+
+  /api/session/{session_id}/answers:
+    post:
+      tags:
+        - S4 Answers
+      summary: 回答保存
+      description: S4（診査室での内省質問）の回答を保存します。逐次保存が可能で、リロード後も復元できます。
+      operationId: saveAnswer
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerRequest'
+      responses:
+        '201':
+          description: 回答保存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: answer saved successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+    get:
+      tags:
+        - S4 Answers
+      summary: 全回答取得
+      description: セッションに紐づく全ての回答を取得します
+      operationId: getAnswers
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '200':
+          description: 回答取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AnswerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+  /api/session/{session_id}/s6/initialize:
+    post:
+      tags:
+        - S6 Progress
+      summary: S6進捗初期化
+      description: S6の進捗を初期化します（5箇所分のレコードを作成）
+      operationId: initializeS6Progress
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '201':
+          description: 進捗初期化成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: progress initialized successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+  /api/session/{session_id}/s6/verify-location:
+    post:
+      tags:
+        - S6 Progress
+      summary: 場所到達記録
+      description: プレイヤーが特定の場所に到達したことを記録します（Web選択による代替方式）
+      operationId: verifyLocation
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyLocationRequest'
+      responses:
+        '200':
+          description: 場所到達記録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyLocationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+        '408':
+          $ref: '#/components/responses/S6TimeExpired'
+
+  /api/session/{session_id}/s6/quiz/{place_id}:
+    get:
+      tags:
+        - S6 Progress
+      summary: クイズ取得
+      description: 特定の場所のクイズを取得します。クイズはS4の回答から生成されます。
+      operationId: getQuiz
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+        - $ref: '#/components/parameters/PlaceIdParam'
+      responses:
+        '200':
+          description: クイズ取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/QuizNotFound'
+        '408':
+          $ref: '#/components/responses/S6TimeExpired'
+
+  /api/session/{session_id}/s6/answer:
+    post:
+      tags:
+        - S6 Progress
+      summary: クイズ回答送信
+      description: クイズの回答を送信します。正解するとピースを獲得できます。
+      operationId: submitQuizAnswer
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuizAnswerRequest'
+      responses:
+        '200':
+          description: 回答送信成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuizAnswerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/QuizNotFound'
+        '408':
+          $ref: '#/components/responses/S6TimeExpired'
+
+  /api/session/{session_id}/s6/progress:
+    get:
+      tags:
+        - S6 Progress
+      summary: S6進捗取得
+      description: S6の進捗状況（5箇所全ての状態）を取得します
+      operationId: getS6Progress
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      responses:
+        '200':
+          description: 進捗取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/S6ProgressResponse'
+                minItems: 5
+                maxItems: 5
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+  /api/session/{session_id}/message:
+    post:
+      tags:
+        - Messages
+      summary: メッセージ保存
+      description: プレイヤーのメッセージを保存します（S9で使用）。最大120文字まで。
+      operationId: saveMessage
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        '201':
+          description: メッセージ保存成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: message saved successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/SessionNotFound'
+
+  /api/messages:
+    get:
+      tags:
+        - Messages
+      summary: メッセージ一覧取得
+      description: 過去プレイヤーのメッセージ一覧を取得します（S8で使用）。完全匿名で取得可能。
+      operationId: getMessages
+      parameters:
+        - name: place_id
+          in: query
+          description: 特定場所のメッセージのみ取得
+          required: false
+          schema:
+            $ref: '#/components/schemas/PlaceIdEnum'
+        - name: limit
+          in: query
+          description: 取得件数の上限
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: メッセージ取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MessageResponse'
+
+  /api/push/vapid-public-key:
+    get:
+      tags:
+        - Push Notifications
+      summary: VAPID公開鍵取得
+      description: プッシュ通知サブスクリプション登録に必要なVAPID公開鍵を取得します
+      operationId: getVapidPublicKey
+      responses:
+        '200':
+          description: VAPID公開鍵取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VAPIDPublicKeyResponse'
+
+  /api/push/subscribe:
+    post:
+      tags:
+        - Push Notifications
+      summary: サブスクリプション登録
+      description: プッシュ通知のサブスクリプションを登録します
+      operationId: subscribePushNotification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubscribeRequest'
+      responses:
+        '201':
+          description: サブスクリプション登録成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscribeResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/push/subscriptions/{subscription_id}:
+    delete:
+      tags:
+        - Push Notifications
+      summary: サブスクリプション削除
+      description: プッシュ通知のサブスクリプションを削除します
+      operationId: unsubscribePushNotification
+      parameters:
+        - $ref: '#/components/parameters/SubscriptionIdParam'
+      responses:
+        '200':
+          description: サブスクリプション削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Push notification subscription deleted successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: サブスクリプションが見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/push/send/{session_id}:
+    post:
+      tags:
+        - Push Notifications
+      summary: プッシュ通知送信
+      description: 特定のセッションに即時プッシュ通知を送信します（ホラー演出用）
+      operationId: sendPushNotification
+      parameters:
+        - $ref: '#/components/parameters/SessionIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendPushRequest'
+      responses:
+        '200':
+          description: プッシュ通知送信成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendPushResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: セッションまたはサブスクリプションが見つかりません
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  parameters:
+    SessionIdParam:
+      name: session_id
+      in: path
+      description: セッションID（UUID v4形式）
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 550e8400-e29b-41d4-a716-446655440000
+
+    PlaceIdParam:
+      name: place_id
+      in: path
+      description: 場所ID（5箇所のいずれか）
+      required: true
+      schema:
+        $ref: '#/components/schemas/PlaceIdEnum'
+
+    SubscriptionIdParam:
+      name: subscription_id
+      in: path
+      description: サブスクリプションID（UUID v4形式）
+      required: true
+      schema:
+        type: string
+        format: uuid
+        example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+
+  schemas:
+    # Enums
+    PlaceIdEnum:
+      type: string
+      enum:
+        - spiral_stairs
+        - fireplace
+        - back_door_hinge
+        - entrance_door
+        - piano_room
+      description: |
+        場所ID:
+        - `spiral_stairs`: 螺旋階段を見上げる高い天井
+        - `fireplace`: メインホールの暖炉のレンガ
+        - `back_door_hinge`: 裏玄関の扉の蝶番
+        - `entrance_door`: 入口エントランスの扉
+        - `piano_room`: 階上応接室のピアノ
+
+    # Session
+    SessionResponse:
+      type: object
+      required:
+        - session_id
+        - current_scene
+        - created_at
+        - expires_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: セッションID（UUID v4）
+          example: 550e8400-e29b-41d4-a716-446655440000
+        current_scene:
+          type: string
+          description: 現在のシーン（s0〜s9）
+          pattern: '^s[0-9]$'
+          example: s0
+        s6_started_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: S6開始時刻（null = 未開始）
+          example: null
+        created_at:
+          type: string
+          format: date-time
+          description: セッション作成時刻（UTC）
+          example: '2025-11-07T10:00:00Z'
+        expires_at:
+          type: string
+          format: date-time
+          description: セッション有効期限（作成時刻 + 60分）
+          example: '2025-11-07T11:00:00Z'
+
+    # Answers
+    AnswerRequest:
+      type: object
+      required:
+        - question_id
+        - answer_text
+      properties:
+        question_id:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: 質問ID（1〜10）
+          example: 1
+        answer_text:
+          type: string
+          minLength: 1
+          description: 回答テキスト（空文字列や"なし"は不可）
+          example: 小学生の頃は毎日サッカーに夢中でした
+
+    AnswerResponse:
+      type: object
+      required:
+        - question_id
+        - answer_text
+        - answered_at
+      properties:
+        question_id:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: 質問ID
+          example: 1
+        answer_text:
+          type: string
+          description: 回答テキスト
+          example: 小学生の頃は毎日サッカーに夢中でした
+        answered_at:
+          type: string
+          format: date-time
+          description: 回答日時（UTC）
+          example: '2025-11-07T10:05:30Z'
+
+    # Quiz
+    QuizResponse:
+      type: object
+      required:
+        - quiz_id
+        - place_id
+        - question_text
+        - options
+      properties:
+        quiz_id:
+          type: string
+          format: uuid
+          description: クイズID
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+        question_text:
+          type: string
+          description: 質問文（S4の回答から生成）
+          example: 小学生時代、何に夢中でしたか？
+        options:
+          type: array
+          items:
+            type: string
+          minItems: 4
+          maxItems: 4
+          description: 4択の選択肢（正解：プレイヤー自身の回答、ダミー：他回答/過去プレイヤー回答/汎用回答）
+          example:
+            - サッカー
+            - 読書
+            - 絵を描くこと
+            - 音楽
+
+    QuizAnswerRequest:
+      type: object
+      required:
+        - place_id
+        - answer_index
+      properties:
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+        answer_index:
+          type: integer
+          minimum: 0
+          maximum: 3
+          description: 選択した選択肢のインデックス（0〜3）
+          example: 0
+
+    QuizAnswerResponse:
+      type: object
+      required:
+        - correct
+      properties:
+        correct:
+          type: boolean
+          description: 正解かどうか
+          example: true
+
+    VerifyLocationRequest:
+      type: object
+      required:
+        - place_id
+      properties:
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+
+    VerifyLocationResponse:
+      type: object
+      required:
+        - verified
+      properties:
+        verified:
+          type: boolean
+          description: 場所到達が記録されたかどうか
+          example: true
+
+    S6ProgressResponse:
+      type: object
+      required:
+        - place_id
+        - verified
+        - answered
+        - correct
+        - is_completed
+      properties:
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+        verified:
+          type: boolean
+          description: 場所に到達済みか
+          example: true
+        answered:
+          type: boolean
+          description: クイズに回答済みか
+          example: true
+        correct:
+          type: boolean
+          description: クイズの正解状態
+          example: true
+        is_completed:
+          type: boolean
+          description: この場所のタスクが完了したか（verified && correct）
+          example: true
+
+    # Messages
+    MessageRequest:
+      type: object
+      required:
+        - place_id
+        - message_text
+      properties:
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+        message_text:
+          type: string
+          minLength: 1
+          maxLength: 120
+          description: メッセージ本文（最大120文字）
+          example: この場所で私は夢を見つけました。次に来る人も、自分の道を見つけてほしい。
+
+    MessageResponse:
+      type: object
+      required:
+        - id
+        - place_id
+        - message_text
+        - created_at
+      properties:
+        id:
+          type: integer
+          description: メッセージID
+          example: 1
+        place_id:
+          $ref: '#/components/schemas/PlaceIdEnum'
+        message_text:
+          type: string
+          description: メッセージ本文
+          example: この場所で私は夢を見つけました。
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時（UTC）
+          example: '2025-11-07T09:30:00Z'
+
+    # Push Notifications
+    VAPIDPublicKeyResponse:
+      type: object
+      required:
+        - public_key
+      properties:
+        public_key:
+          type: string
+          description: Base64 URL-safeエンコードされたVAPID公開鍵
+          example: BKxUFP7W0Q...
+
+    SubscribeRequest:
+      type: object
+      required:
+        - session_id
+        - endpoint
+        - keys
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: セッションID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        endpoint:
+          type: string
+          format: uri
+          description: プッシュエンドポイントURL
+          example: https://fcm.googleapis.com/fcm/send/...
+        keys:
+          type: object
+          required:
+            - p256dh
+            - auth
+          properties:
+            p256dh:
+              type: string
+              description: P256dh公開鍵（Base64）
+              example: BIXzEKOFGH...
+            auth:
+              type: string
+              description: 認証シークレット（Base64）
+              example: TjRMVKYWZ...
+
+    SubscribeResponse:
+      type: object
+      required:
+        - subscription_id
+        - message
+      properties:
+        subscription_id:
+          type: string
+          format: uuid
+          description: サブスクリプションID
+          example: 7c9e6679-7425-40de-944b-e07fc1f90ae7
+        message:
+          type: string
+          example: Push notification subscription created successfully
+
+    SendPushRequest:
+      type: object
+      required:
+        - message
+      properties:
+        title:
+          type: string
+          description: 通知タイトル（オプション）
+          example: 重要なお知らせ
+        message:
+          type: string
+          minLength: 1
+          description: 通知メッセージ（必須）
+          example: あと2分で時間切れです！
+
+    SendPushResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: 送信成功フラグ
+          example: true
+        message:
+          type: string
+          example: Push notification sent successfully
+
+    # Error Response
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: エラーコード
+          enum:
+            - INVALID_INPUT
+            - INVALID_STATE
+            - INVALID_SESSION_ID
+            - SESSION_NOT_FOUND
+            - SESSION_EXPIRED
+            - NOT_FOUND
+            - ANSWER_NOT_FOUND
+            - QUIZ_NOT_FOUND
+            - S6_NOT_STARTED
+            - S6_TIME_EXPIRED
+            - MESSAGE_TOO_LONG
+            - MESSAGE_EMPTY
+          example: INVALID_INPUT
+        message:
+          type: string
+          description: 人間が読めるエラーメッセージ
+          example: question ID must be between 1 and 10
+
+  responses:
+    BadRequest:
+      description: 不正なリクエスト
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            InvalidInput:
+              summary: 不正な入力値
+              value:
+                error: INVALID_INPUT
+                message: question ID must be between 1 and 10
+            InvalidSessionId:
+              summary: 不正なセッションID形式
+              value:
+                error: INVALID_SESSION_ID
+                message: invalid session ID format
+
+    SessionNotFound:
+      description: セッションが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: SESSION_NOT_FOUND
+            message: session not found
+
+    SessionExpired:
+      description: セッションが有効期限切れです
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: SESSION_EXPIRED
+            message: session has expired
+
+    QuizNotFound:
+      description: クイズが見つかりません
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: QUIZ_NOT_FOUND
+            message: quiz not found
+
+    S6TimeExpired:
+      description: S6の7分制限時間が経過しました
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: S6_TIME_EXPIRED
+            message: S6 time limit has expired
+
+    InternalServerError:
+      description: 内部サーバーエラー
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: INTERNAL_ERROR
+            message: database connection failed
