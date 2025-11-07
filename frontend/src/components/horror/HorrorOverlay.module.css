@@ -1,0 +1,168 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ========================================
+   ノイズレイヤー
+   ======================================== */
+.noiseLayer {
+  position: absolute;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.03) 3px,
+      rgba(255, 255, 255, 0.03) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(255, 255, 255, 0.03) 3px,
+      rgba(255, 255, 255, 0.03) 3px
+    );
+  animation: noise 0.2s infinite;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes noise {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-1px, -1px); }
+  20% { transform: translate(1px, 1px); }
+  30% { transform: translate(-1px, 1px); }
+  40% { transform: translate(1px, -1px); }
+  50% { transform: translate(-1px, -1px); }
+  60% { transform: translate(1px, 1px); }
+  70% { transform: translate(-1px, 1px); }
+  80% { transform: translate(1px, -1px); }
+  90% { transform: translate(-1px, -1px); }
+}
+
+/* ========================================
+   ヴィネットレイヤー
+   ======================================== */
+.vignetteLayer {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    transparent 0%,
+    rgba(0, 0, 0, 0.5) 70%,
+    rgba(0, 0, 0, 0.8) 100%
+  );
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* ========================================
+   セピア調フィルター
+   ======================================== */
+.sepia::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--sepia);
+  mix-blend-mode: overlay;
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 98;
+}
+
+/* ========================================
+   赤み強調フィルター
+   ======================================== */
+.redTint::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--blood-red);
+  mix-blend-mode: multiply;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 97;
+}
+
+/* ========================================
+   グリッチ効果
+   ======================================== */
+.glitch {
+  animation: glitch 5s infinite;
+}
+
+@keyframes glitch {
+  0%, 90%, 100% {
+    transform: translate(0, 0);
+    filter: hue-rotate(0deg);
+  }
+  91% {
+    transform: translate(-5px, 0);
+    filter: hue-rotate(-10deg);
+  }
+  92% {
+    transform: translate(5px, 0);
+    filter: hue-rotate(10deg);
+  }
+  93% {
+    transform: translate(-5px, 0);
+    filter: hue-rotate(-5deg);
+  }
+  94% {
+    transform: translate(0, 0);
+    filter: hue-rotate(0deg);
+  }
+}
+
+/* ========================================
+   影・シルエットレイヤー
+   ======================================== */
+.shadowsLayer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 96;
+}
+
+.shadow {
+  position: absolute;
+  width: 100px;
+  height: 200px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0.8) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent 100%
+  );
+  filter: blur(20px);
+  animation: shadowMove 10s infinite ease-in-out;
+}
+
+@keyframes shadowMove {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) scaleY(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(-20px) scaleY(1.2);
+  }
+}
+
+/* ========================================
+   アニメーション抑制
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .noiseLayer,
+  .glitch,
+  .shadow {
+    animation: none;
+  }
+}

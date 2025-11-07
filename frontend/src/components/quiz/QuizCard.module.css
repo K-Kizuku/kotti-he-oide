@@ -1,0 +1,123 @@
+/* ========================================
+   カード
+   ======================================== */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  max-width: 600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ========================================
+   場所名
+   ======================================== */
+.placeName {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--old-gold);
+  text-align: center;
+  padding: 0.5rem 1rem;
+  background: var(--muted);
+  border-radius: 4px;
+}
+
+/* ========================================
+   質問
+   ======================================== */
+.question {
+  text-align: center;
+}
+
+.question p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.125rem, 3vw, 1.5rem);
+  line-height: 1.6;
+  color: var(--foreground);
+  margin: 0;
+}
+
+/* ========================================
+   選択肢
+   ======================================== */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option {
+  padding: 1rem 1.5rem;
+  background: var(--muted);
+  border: 2px solid var(--border-subtle);
+  border-radius: 6px;
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.option:hover:not(:disabled) {
+  background: var(--background);
+  border-color: var(--accent);
+  transform: translateX(4px);
+}
+
+.option:disabled {
+  cursor: not-allowed;
+}
+
+.option.selected {
+  border-color: var(--accent);
+  background: var(--background);
+  box-shadow: 0 0 0 4px rgba(158, 0, 0, 0.2);
+}
+
+.option.correct {
+  border-color: var(--success);
+  background: var(--success);
+  color: white;
+}
+
+.option.wrong {
+  border-color: var(--blood-red);
+  background: var(--error);
+  color: white;
+  animation: shake 0.3s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  75% { transform: translateX(10px); }
+}
+
+/* ========================================
+   フッター
+   ======================================== */
+.footer {
+  margin-top: 0.5rem;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .card {
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+
+  .option {
+    padding: 0.875rem 1rem;
+  }
+}

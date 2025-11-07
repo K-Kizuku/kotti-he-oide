@@ -1,0 +1,48 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+}
+
+/* ========================================
+   ビデオとキャンバス
+   ======================================== */
+.video,
+.canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========================================
+   ローディング表示
+   ======================================== */
+.loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.loading p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}

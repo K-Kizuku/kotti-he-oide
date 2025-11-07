@@ -1,7 +1,7 @@
 'use client';
 
-import { usePushNotification } from '@/hooks/usePushNotification';
-import { useNotificationPermission } from '@/hooks/useNotificationPermission';
+import { usePushNotification } from '@/_archive/hooks/usePushNotification';
+import { useNotificationPermission } from '@/_archive/hooks/useNotificationPermission';
 import NotificationPermissionButton from './NotificationPermissionButton';
 
 export default function PushNotificationManager() {

@@ -1,0 +1,140 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: black;
+  animation: jumpScareAppear 0.1s ease-out;
+}
+
+@keyframes jumpScareAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ========================================
+   フラッシュエフェクト
+   ======================================== */
+.flash {
+  position: absolute;
+  inset: 0;
+  background: white;
+  animation: flash 0.15s ease-out;
+  pointer-events: none;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   画像
+   ======================================== */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: imageShake 0.1s infinite;
+}
+
+@keyframes imageShake {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-10px, -10px); }
+  50% { transform: translate(10px, 10px); }
+  75% { transform: translate(-10px, 10px); }
+}
+
+/* ========================================
+   テキスト
+   ======================================== */
+.textContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+}
+
+.text {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(2rem, 8vw, 4rem);
+  color: var(--blood-red);
+  text-align: center;
+  text-shadow:
+    0 0 20px rgba(139, 0, 0, 1),
+    0 0 40px rgba(139, 0, 0, 0.8),
+    0 0 60px rgba(139, 0, 0, 0.6);
+  letter-spacing: 0.2em;
+  animation: textPulse 0.2s infinite;
+}
+
+@keyframes textPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+/* ========================================
+   グリッチオーバーレイ
+   ======================================== */
+.glitchOverlay {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 4px,
+    rgba(255, 0, 0, 0.1) 5px,
+    rgba(255, 0, 0, 0.1) 5px
+  );
+  animation: glitchLines 0.1s infinite;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+@keyframes glitchLines {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-5px);
+  }
+}
+
+/* ========================================
+   アニメーション抑制
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .container,
+  .image,
+  .text,
+  .glitchOverlay {
+    animation: none;
+  }
+
+  .flash {
+    display: none;
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useNotificationPermission } from '@/hooks/useNotificationPermission';
+import { useNotificationPermission } from '@/_archive/hooks/useNotificationPermission';
 
 export default function NotificationPermissionButton() {
   const { isLoading, requestPermission, isSupported, isGranted, isDenied } = useNotificationPermission();

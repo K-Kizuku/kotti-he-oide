@@ -1,0 +1,192 @@
+/* ========================================
+   ベーススタイル
+   ======================================== */
+.glitch {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-onryou), serif;
+  color: var(--foreground);
+}
+
+/* ========================================
+   グリッチエフェクト（疑似要素）
+   ======================================== */
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.8;
+}
+
+.glitch::before {
+  left: 2px;
+  text-shadow: -2px 0 var(--blood-red);
+  clip: rect(24px, 550px, 90px, 0);
+  animation: glitch-anim-1 2s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  left: -2px;
+  text-shadow: -2px 0 var(--old-gold);
+  clip: rect(85px, 550px, 140px, 0);
+  animation: glitch-anim-2 2.5s infinite linear alternate-reverse;
+}
+
+/* ========================================
+   低強度グリッチ
+   ======================================== */
+.low::before {
+  animation-duration: 4s;
+  opacity: 0.5;
+}
+
+.low::after {
+  animation-duration: 5s;
+  opacity: 0.5;
+}
+
+/* ========================================
+   中強度グリッチ
+   ======================================== */
+.medium::before {
+  animation-duration: 2s;
+  opacity: 0.8;
+}
+
+.medium::after {
+  animation-duration: 2.5s;
+  opacity: 0.8;
+}
+
+/* ========================================
+   高強度グリッチ
+   ======================================== */
+.high::before {
+  animation-duration: 1s;
+  opacity: 1;
+}
+
+.high::after {
+  animation-duration: 1.2s;
+  opacity: 1;
+}
+
+/* ========================================
+   常時アニメーション
+   ======================================== */
+.continuous::before,
+.continuous::after {
+  animation-iteration-count: infinite;
+}
+
+/* ========================================
+   グリッチアニメーション
+   ======================================== */
+@keyframes glitch-anim-1 {
+  0% {
+    clip: rect(100px, 9999px, 40px, 0);
+    transform: skew(0.5deg);
+  }
+  10% {
+    clip: rect(20px, 9999px, 140px, 0);
+    transform: skew(-0.3deg);
+  }
+  20% {
+    clip: rect(80px, 9999px, 30px, 0);
+    transform: skew(0.2deg);
+  }
+  30% {
+    clip: rect(40px, 9999px, 120px, 0);
+    transform: skew(-0.5deg);
+  }
+  40% {
+    clip: rect(110px, 9999px, 60px, 0);
+    transform: skew(0.4deg);
+  }
+  50% {
+    clip: rect(30px, 9999px, 90px, 0);
+    transform: skew(-0.2deg);
+  }
+  60% {
+    clip: rect(70px, 9999px, 140px, 0);
+    transform: skew(0.3deg);
+  }
+  70% {
+    clip: rect(10px, 9999px, 50px, 0);
+    transform: skew(-0.4deg);
+  }
+  80% {
+    clip: rect(90px, 9999px, 100px, 0);
+    transform: skew(0.1deg);
+  }
+  90% {
+    clip: rect(50px, 9999px, 80px, 0);
+    transform: skew(-0.3deg);
+  }
+  100% {
+    clip: rect(120px, 9999px, 20px, 0);
+    transform: skew(0.2deg);
+  }
+}
+
+@keyframes glitch-anim-2 {
+  0% {
+    clip: rect(130px, 9999px, 70px, 0);
+    transform: skew(-0.4deg);
+  }
+  10% {
+    clip: rect(60px, 9999px, 110px, 0);
+    transform: skew(0.2deg);
+  }
+  20% {
+    clip: rect(10px, 9999px, 140px, 0);
+    transform: skew(-0.3deg);
+  }
+  30% {
+    clip: rect(100px, 9999px, 40px, 0);
+    transform: skew(0.5deg);
+  }
+  40% {
+    clip: rect(30px, 9999px, 90px, 0);
+    transform: skew(-0.2deg);
+  }
+  50% {
+    clip: rect(80px, 9999px, 120px, 0);
+    transform: skew(0.4deg);
+  }
+  60% {
+    clip: rect(50px, 9999px, 60px, 0);
+    transform: skew(-0.5deg);
+  }
+  70% {
+    clip: rect(110px, 9999px, 100px, 0);
+    transform: skew(0.1deg);
+  }
+  80% {
+    clip: rect(20px, 9999px, 130px, 0);
+    transform: skew(-0.3deg);
+  }
+  90% {
+    clip: rect(90px, 9999px, 50px, 0);
+    transform: skew(0.4deg);
+  }
+  100% {
+    clip: rect(40px, 9999px, 80px, 0);
+    transform: skew(-0.2deg);
+  }
+}
+
+/* ========================================
+   アニメーション抑制
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .glitch::before,
+  .glitch::after {
+    animation: none;
+    opacity: 0;
+  }
+}

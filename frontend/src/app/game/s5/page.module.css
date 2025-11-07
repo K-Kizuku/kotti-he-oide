@@ -1,0 +1,212 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.9),
+      rgba(0, 0, 0, 0.95)
+    ),
+    var(--background);
+  color: var(--foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+/* ========================================
+   コンテンツ
+   ======================================== */
+.content {
+  max-width: 600px;
+  width: 100%;
+  position: relative;
+}
+
+/* ========================================
+   年代バッジ
+   ======================================== */
+.yearBadge {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: var(--old-gold);
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
+  backdrop-filter: blur(10px);
+  z-index: 10;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* ========================================
+   通知ボックス
+   ======================================== */
+.notificationBox {
+  background: rgba(139, 0, 0, 0.3);
+  border: 3px solid var(--blood-red);
+  border-radius: 8px;
+  padding: 3rem 2rem;
+  backdrop-filter: blur(10px);
+  text-align: center;
+  animation: emergeFade 3s ease;
+}
+
+@keyframes emergeFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.notificationText {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  color: var(--blood-red);
+  font-weight: normal;
+}
+
+/* ========================================
+   説明ボックス
+   ======================================== */
+.explanationBox {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2.5rem;
+  backdrop-filter: blur(10px);
+  text-align: center;
+  animation: fadeIn 1.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.explanationText {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  color: var(--foreground);
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* ========================================
+   準備完了ボックス
+   ======================================== */
+.readyBox {
+  background: var(--overlay-bg);
+  border: 2px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 1.5s ease;
+}
+
+.taskTitle {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  font-weight: normal;
+  color: var(--blood-red);
+  text-align: center;
+  margin: 0;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.taskDescription {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.taskDescription p {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--foreground);
+  line-height: 1.6;
+  text-align: center;
+  margin: 0;
+}
+
+.timeLimit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  background: rgba(139, 0, 0, 0.2);
+  border: 2px solid var(--blood-red);
+  border-radius: 6px;
+}
+
+.timeLimitLabel {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: var(--muted-foreground);
+}
+
+.timeLimitValue {
+  font-family: var(--font-onryou), serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: var(--blood-red);
+  font-weight: bold;
+  text-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+}
+
+.warning {
+  font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
+  color: var(--blood-red) !important;
+  font-weight: 500;
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .yearBadge {
+    top: 1rem;
+    padding: 0.375rem 1rem;
+  }
+
+  .notificationBox {
+    padding: 2rem 1.5rem;
+  }
+
+  .explanationBox {
+    padding: 2rem;
+  }
+
+  .readyBox {
+    padding: 1.5rem;
+  }
+
+  .timeLimit {
+    padding: 1rem;
+  }
+}

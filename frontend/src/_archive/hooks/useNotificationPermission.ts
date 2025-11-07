@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NotificationPermissionState } from '@/types/push';
+import { NotificationPermissionState } from '@/_archive/types/push';
 
 export function useNotificationPermission() {
   const [permission, setPermission] = useState<NotificationPermissionState>('default');

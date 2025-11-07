@@ -1,0 +1,42 @@
+/* ========================================
+   コンテナ
+   ======================================== */
+.container {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: black;
+  z-index: 1000;
+}
+
+/* ========================================
+   プレビューエリア
+   ======================================== */
+.preview {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========================================
+   コントロールエリア
+   ======================================== */
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  background: var(--overlay-bg);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ========================================
+   レスポンシブ調整
+   ======================================== */
+@media (max-width: 640px) {
+  .controls {
+    padding: 1rem;
+  }
+}
