@@ -2,6 +2,8 @@
 
 このファイルは、Claude Code (claude.ai/code) がこのリポジトリのコードを扱う際のガイダンスを提供します。
 
+**重要**: このドキュメントの内容は `.kiro/steering/` ディレクトリ内のファイル（product.md、tech.md、structure.md）を常に参照し、最新の仕様に準拠してください。steeringファイルの内容が最も正確で最新の情報源です。
+
 ## プロジェクト概要
 
 **赤煉瓦文化館 〜こっちにおいで〜**
@@ -200,8 +202,9 @@ cd server
 make run          # Run server from root main.go (port 8080)
 make run-cmd      # Run server from cmd/server/main.go
 make build        # Build binary to bin/server
-make test         # Run tests
+make test         # Run tests (PoCのため新規テスト作成は不要)
 make fmt          # Format code
+make lint         # Run linter (必須)
 ```
 
 The server runs on http://localhost:8080 by default.
@@ -350,6 +353,15 @@ infra/
 - 全てのコミュニケーションは日本語で行う
 - コード内のコメントも可能な限り日本語で記述する
 - 変数名や関数名は英語でも構わないが、説明やドキュメントは日本語とする
+
+## テストポリシー
+
+**重要: このプロジェクトはPoC（Proof of Concept）です。**
+
+- **テストコードの作成は一切不要**です
+- 開発速度とプロトタイピングを最優先します
+- ユニットテスト、統合テスト、E2Eテストなど、あらゆる種類のテストコードの実装は求められません
+- `make test` コマンドは存在しますが、新規テストファイルの作成は不要です
 
 ### ゲーム固有の開発ガイドライン
 
