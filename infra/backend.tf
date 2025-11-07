@@ -7,8 +7,8 @@ resource "aws_s3_bucket" "terraform_state" {
   force_destroy = false
 
   tags = {
-    Name        = "TerraformStateBucket"
-    Project     = "kotti-he-oide"
+    Name    = "TerraformStateBucket"
+    Project = "kotti-he-oide"
   }
 }
 

@@ -41,3 +41,18 @@ output "rds_endpoint" {
 output "s3_website_endpoint" {
   value = aws_s3_bucket_website_configuration.assets.website_endpoint
 }
+
+output "voicevox_ec2_private_ip" {
+  description = "VOICEVOX EC2インスタンスのプライベートIPアドレス"
+  value       = aws_instance.voicevox.private_ip
+}
+
+output "voicevox_ec2_public_ip" {
+  description = "VOICEVOX EC2インスタンスのパブリックIPアドレス"
+  value       = aws_instance.voicevox.public_ip
+}
+
+output "voicevox_ec2_endpoint" {
+  description = "ECSからアクセスするVOICEVOXエンドポイント"
+  value       = "http://${aws_instance.voicevox.private_ip}:${var.voicevox_port}"
+}

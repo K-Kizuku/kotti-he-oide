@@ -44,7 +44,7 @@ variable "web_container_image" {
 }
 
 variable "microservice_container_port" {
-  type    = number
+  type = number
   # gRPC 標準ポートに合わせる
   default = 50051
 }
@@ -65,4 +65,10 @@ locals {
 variable "custom_domain_name" {
   description = "Cloudflareで管理しているカスタムドメイン(サブドメイン含む)。例: kotti.kizuku-hackathon.work"
   type        = string
+}
+
+variable "voicevox_port" {
+  type        = number
+  description = "VOICEVOXサーバーのポート番号"
+  default     = 50021
 }
