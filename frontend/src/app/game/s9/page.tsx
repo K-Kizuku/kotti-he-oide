@@ -10,10 +10,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { saveMessage } from '@/lib/game/api';
 import {
   FAVORITE_PLACES,
@@ -21,8 +20,7 @@ import {
 } from '@/lib/game/constants';
 
 export default function S9Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
 
   const [step, setStep] = useState<'intro' | 'input' | 'select' | 'complete'>(
     'intro'
@@ -210,7 +208,7 @@ export default function S9Page() {
             </div>
 
             <Button
-              onClick={() => router.push('/')}
+              onClick={() => (window.location.href = '/')}
               variant="secondary"
               size="large"
               fullWidth

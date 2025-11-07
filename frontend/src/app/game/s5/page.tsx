@@ -9,17 +9,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import GlitchText from '@/components/horror/GlitchText';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { startS6Exploration } from '@/lib/game/api';
 import { TIMER_DURATIONS } from '@/lib/game/constants';
 
 export default function S5Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
   const [step, setStep] = useState<'notification' | 'explanation' | 'ready'>(
     'notification'
   );
@@ -47,7 +45,7 @@ export default function S5Page() {
     // S6探索を開始（サーバー側でタイマー記録）
     await startS6Exploration(session.sessionId);
 
-    router.push('/game/s6');
+    await transitionTo('s6');
   };
 
   const minutes = Math.floor(TIMER_DURATIONS.S6_EXPLORATION / 60);

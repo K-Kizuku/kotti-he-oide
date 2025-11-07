@@ -9,17 +9,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 
 type Language = 'ja' | 'en';
 
 export default function S0Page() {
-  const router = useRouter();
-  const { session, isLoading: sessionLoading } = useSession();
+  const { session, isInitialized, transitionTo } = useGameFlow();
 
   const [language, setLanguage] = useState<Language>('ja');
   const [cameraPermission, setCameraPermission] = useState(false);
@@ -100,13 +98,13 @@ export default function S0Page() {
   const canStart =
     cameraPermission && audioPermission && acceptedWarning && session;
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (canStart) {
-      router.push('/game/s1');
+      await transitionTo('s1');
     }
   };
 
-  if (sessionLoading) {
+  if (!isInitialized) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>Loading...</div>

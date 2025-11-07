@@ -11,7 +11,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import Timer from '@/components/ui/Timer';
@@ -19,7 +18,7 @@ import Modal from '@/components/ui/Modal';
 import QuizCard from '@/components/quiz/QuizCard';
 import CameraCapture from '@/components/camera/CameraCapture';
 import JumpScare from '@/components/horror/JumpScare';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { useTimer } from '@/hooks/useTimer';
 import {
   getQuiz,
@@ -41,8 +40,7 @@ type PlaceStatus = {
 };
 
 export default function S6Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
 
   // 各場所の状態
   const [placeStatuses, setPlaceStatuses] = useState<
@@ -98,7 +96,7 @@ export default function S6Page() {
     );
 
     if (!allCompleted) {
-      router.push('/game/gameover');
+      await transitionTo('gameover');
     }
   }
 
@@ -209,8 +207,8 @@ export default function S6Page() {
 
       if (allCompleted) {
         // 全ピース取得完了
-        setTimeout(() => {
-          router.push('/game/s7');
+        setTimeout(async () => {
+          await transitionTo('s7');
         }, 1500);
       }
     } else {

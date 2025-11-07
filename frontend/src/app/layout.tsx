@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Serif_JP } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+import { GameFlowProvider } from "@/contexts/GameFlowContext";
+import ErrorModal from "@/components/game/ErrorModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -70,7 +72,10 @@ export default function RootLayout({
         <meta name="msapplication-TileImage" content="/icons/icon-144.png" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${notoSerifJP.variable} ${onryouFont.variable}`}>
-        {children}
+        <GameFlowProvider>
+          {children}
+          <ErrorModal />
+        </GameFlowProvider>
       </body>
     </html>
   );

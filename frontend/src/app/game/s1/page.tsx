@@ -9,12 +9,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import VoicePlayer from '@/components/audio/VoicePlayer';
 import CameraPreview from '@/components/camera/CameraPreview';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { generateVoice } from '@/lib/game/api';
 
 type ConversationStep =
@@ -32,8 +31,7 @@ interface ConversationData {
 }
 
 export default function S1Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
 
   const [step, setStep] = useState<ConversationStep>('welcome');
   const [data, setData] = useState<ConversationData>({
@@ -116,8 +114,8 @@ export default function S1Page() {
   };
 
   // 会話終了
-  const handleComplete = () => {
-    router.push('/game/s2');
+  const handleComplete = async () => {
+    await transitionTo('s2');
   };
 
   // 入力ステップかどうか

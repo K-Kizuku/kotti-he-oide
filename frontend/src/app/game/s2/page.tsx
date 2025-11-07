@@ -12,21 +12,21 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import { FAVORITE_PLACES } from '@/lib/game/constants';
+import { useGameFlow } from '@/hooks/useGameFlow';
 
 export default function S2Page() {
-  const router = useRouter();
+  const { transitionTo } = useGameFlow();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentPlace = FAVORITE_PLACES[currentIndex];
   const isLastPlace = currentIndex === FAVORITE_PLACES.length - 1;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isLastPlace) {
-      router.push('/game/s3');
+      await transitionTo('s3');
     } else {
       setCurrentIndex((prev) => prev + 1);
     }

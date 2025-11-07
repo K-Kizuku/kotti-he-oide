@@ -10,16 +10,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import CameraPreview from '@/components/camera/CameraPreview';
 import HorrorOverlay from '@/components/horror/HorrorOverlay';
 import GlitchText from '@/components/horror/GlitchText';
 import AudioPlayer from '@/components/audio/AudioPlayer';
+import { useGameFlow } from '@/hooks/useGameFlow';
 
 export default function S3Page() {
-  const router = useRouter();
+  const { transitionTo } = useGameFlow();
   const [showShadows, setShowShadows] = useState(false);
   const [instruction, setInstruction] = useState('');
 
@@ -47,8 +47,8 @@ export default function S3Page() {
     };
   }, []);
 
-  const handleProceed = () => {
-    router.push('/game/s4');
+  const handleProceed = async () => {
+    await transitionTo('s4');
   };
 
   return (

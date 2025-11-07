@@ -7,20 +7,20 @@
 
 'use client';
 
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import GlitchText from '@/components/horror/GlitchText';
+import { useGameFlow } from '@/hooks/useGameFlow';
 
 export default function GameOverPage() {
-  const router = useRouter();
+  const { transitionTo } = useGameFlow();
 
-  const handleRetry = () => {
-    router.push('/game/s0');
+  const handleRetry = async () => {
+    await transitionTo('s0');
   };
 
   const handleGoHome = () => {
-    router.push('/');
+    window.location.href = '/';
   };
 
   return (
