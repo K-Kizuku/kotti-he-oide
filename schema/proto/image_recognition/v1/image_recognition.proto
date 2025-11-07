@@ -31,6 +31,8 @@ message RecognizeImageRequest {
   bytes image_data = 1;
   // 類似度の閾値（0.0-1.0）。未指定時はサーバ既定値。
   optional float threshold = 2;
+  // 判定対象の場所（カテゴリ）ID。指定時は該当カテゴリ内の参照のみで判定する。
+  optional string place_id = 3;
 }
 
 // 類似度判定レスポンス

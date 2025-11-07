@@ -47,7 +47,8 @@ docker run --rm -p 50051:50051 image-recognition:dev
 ```proto
 message RecognizeImageRequest {
   bytes image_data = 1;   // JPEG/PNG/WebP/BMP 等
-  float threshold = 2;    // 0.0-1.0、未指定時は既定（0.8）
+  float threshold = 2;    // 0.0-1.0、未指定時は既定（0.6）
+  string place_id = 3;    // 任意: カテゴリ/場所IDで参照画像を絞り込む
 }
 
 message RecognizeImageResponse {
@@ -65,6 +66,8 @@ services/image_recognition/
 │  ├─ server.py         # gRPC サーバー エントリポイント
 │  └─ gen/              # 生成される Python スタブ
 │     └─ image_recognition/v1/*_pb2*.py
+│  └─ models/
+│     └─ place_ids.py   # place_id 語彙の共有定義
 ├─ Dockerfile           # uv と grpcio-tools による生成 + 実行
 ├─ Makefile             # 開発用コマンド
 ├─ pyproject.toml       # 依存定義（uv 管理）
@@ -86,9 +89,23 @@ make test    # pytest
 - `REFERENCE_S3_BUCKET`: 参照画像を格納した S3 バケット名
 - `REFERENCE_S3_PREFIX`: 参照画像のキー Prefix（任意）
 - `AWS_REGION` or `AWS_DEFAULT_REGION`: S3 用リージョン
-- `DEFAULT_SIMILARITY_THRESHOLD`: 類似度の既定しきい値（デフォルト 0.8）
+- `DEFAULT_SIMILARITY_THRESHOLD`: 類似度の既定しきい値（デフォルト 0.6）
+- `GRPC_PORT`: gRPC ポート（デフォルト: 50051）
+- `GRPC_TLS_CERT_FILE`, `GRPC_TLS_KEY_FILE`: 指定時に TLS 有効化
 
 ## メモ
 - インフラ（ECS/ECR/Terraform など）は別担当が実装する想定です。本ディレクトリでは扱いません。
 - 機密情報は `.env` 等に保持し、コミットしないでください。
 - コード内コメントは日本語を推奨します。
+
+## 関連ドキュメント
+- `services/image_recognition/PLACE_IDS.md` — place_idの語彙とS3配置規約
+- `services/image_recognition/INTEGRATION.md` — Goサーバ/フロントとの繋ぎ込みガイド
+
+## ヘルスチェック仕様
+- `HealthCheck` はサーバープロセスが応答可能かのみを返し、常に `healthy=true, status="ok"` を返します。
+- S3疎通や参照画像のロード可否は起動ログに出力します（失敗してもサーバーは起動継続）。
+
+## 識別不可時のフォールバック（簡易実装）
+- 記述子が抽出できない、または（place_id指定時に）該当参照が0件の場合は、比較処理を行わず80%の確率で「同じ」と判定します。
+- 判定はログに `recognize fallback_random` として記録されます。
