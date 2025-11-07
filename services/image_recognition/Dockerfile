@@ -34,5 +34,9 @@ RUN mkdir -p app/gen && \
 
 EXPOSE 50051
 
+# コンテナのヘルスチェック（gRPC HealthCheck 呼び出し）
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD uv run python -m app.healthcheck || exit 1
+
 # 本番実行コマンド（gRPC サーバ）
 CMD ["uv", "run", "python", "-m", "app.server"]
