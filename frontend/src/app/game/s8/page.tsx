@@ -9,10 +9,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import Timer from '@/components/ui/Timer';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { useTimer } from '@/hooks/useTimer';
 import { getMessages, type PlayerMessage } from '@/lib/game/api';
 import {
@@ -21,7 +21,7 @@ import {
 } from '@/lib/game/constants';
 
 export default function S8Page() {
-  const router = useRouter();
+  const { transitionTo } = useGameFlow();
   const [step, setStep] = useState<'search' | 'messages'>('search');
   const [messages, setMessages] = useState<PlayerMessage[]>([]);
 
@@ -29,9 +29,9 @@ export default function S8Page() {
     initialSeconds: TIMER_DURATIONS.S8_EXPLORATION,
     autoStart: true,
     warningThreshold: TIMER_WARNING_THRESHOLDS.S8,
-    onComplete: () => {
+    onComplete: async () => {
       if (step !== 'messages') {
-        router.push('/game/gameover');
+        await transitionTo('gameover');
       }
     },
   });
@@ -48,8 +48,8 @@ export default function S8Page() {
   };
 
   // 次へ進む
-  const handleNext = () => {
-    router.push('/game/s9');
+  const handleNext = async () => {
+    await transitionTo('s9');
   };
 
   return (

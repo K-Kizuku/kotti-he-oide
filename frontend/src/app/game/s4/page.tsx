@@ -10,11 +10,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
 import ProgressBar from '@/components/ui/ProgressBar';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { saveAnswer, getAnswers } from '@/lib/game/api';
 import {
   INTROSPECTION_QUESTIONS,
@@ -22,8 +21,7 @@ import {
 } from '@/lib/game/constants';
 
 export default function S4Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -137,7 +135,7 @@ export default function S4Page() {
         setCurrentAnswer('');
       } else {
         // 全問回答済み
-        router.push('/game/s5');
+        await transitionTo('s5');
       }
     } catch (err) {
       console.error('Failed to save answer:', err);

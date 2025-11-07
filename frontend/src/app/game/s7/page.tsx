@@ -8,15 +8,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import Button from '@/components/ui/Button';
-import { useSession } from '@/hooks/useSession';
+import { useGameFlow } from '@/hooks/useGameFlow';
 import { getAnswers, type SavedAnswer } from '@/lib/game/api';
 
 export default function S7Page() {
-  const router = useRouter();
-  const { session } = useSession();
+  const { session, transitionTo } = useGameFlow();
 
   const [lifeGoalAnswer, setLifeGoalAnswer] = useState('');
   const [userInput, setUserInput] = useState('');
@@ -54,8 +52,8 @@ export default function S7Page() {
     if (trimmedInput === trimmedAnswer) {
       // 完全一致：成功
       setStep('success');
-      setTimeout(() => {
-        router.push('/game/s8');
+      setTimeout(async () => {
+        await transitionTo('s8');
       }, 3000);
     } else {
       // 不一致：エラー

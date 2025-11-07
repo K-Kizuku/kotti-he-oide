@@ -1,0 +1,82 @@
+.errorContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+}
+
+.errorIcon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.userMessage {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: center;
+  color: #333;
+  margin: 0;
+}
+
+.footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* 開発用詳細情報 */
+.details {
+  margin-top: 1rem;
+  width: 100%;
+  font-size: 0.875rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #666;
+  user-select: none;
+}
+
+.details summary:hover {
+  color: #333;
+}
+
+.debugInfo {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.debugInfo p {
+  margin: 0.5rem 0;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #555;
+  word-break: break-all;
+}
+
+.debugInfo strong {
+  color: #333;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 480px) {
+  .errorContent {
+    gap: 1rem;
+  }
+
+  .errorIcon {
+    font-size: 2.5rem;
+  }
+
+  .userMessage {
+    font-size: 0.9rem;
+  }
+}
