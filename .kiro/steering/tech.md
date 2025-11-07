@@ -52,14 +52,19 @@ make lint    # golangci-lintチェック（エラーがあれば修正必須）
 
 ## 主要ライブラリ
 ### バックエンド
-- **Web Push**: `github.com/SherClockHolmes/webpush-go` v1.4.0
-- **JWT**: `github.com/golang-jwt/jwt/v5` v5.2.1
 - **PostgreSQL**: `github.com/jackc/pgx/v5` v5.7.5
-- **DI**: `github.com/google/wire` v0.7.0
+- **gRPC**: Protocol Buffers（画像認識サービス連携用）
+- **セッション管理**: UUID生成、1時間TTL
+- **画像処理**: S3アップロード、類似度計算
 
 ### フロントエンド
 - **カメラ処理**: Canvas 2D API、getUserMedia
-- **画像フィルター**: 自作ImageData処理（Sobel、ポスタライズ等）
+- **画像フィルター**: 自作ImageData処理（ホラー演出用）
+- **音声再生**: HTML5 Audio API（VOICEVOX生成音声）
+
+### マイクロサービス（Python）
+- **画像認識**: gRPC、OpenCV、類似度計算
+- **音声生成**: VOICEVOX（青山龍星(しっとり)）
 
 ## よく使用するコマンド
 

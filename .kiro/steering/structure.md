@@ -5,15 +5,15 @@
 ```
 ├── frontend/          # Next.js Reactアプリケーション
 ├── server/           # Go バックエンドAPIサーバー
+├── services/         # マイクロサービス（画像認識等）
 ├── infra/            # AWS Terraformインフラストラクチャ設定
+├── docs/             # 企画書・仕様書
 ├── .github/          # GitHub Actions CI/CDワークフロー
 ├── .kiro/            # Kiro AIアシスタント設定
 ├── .claude/          # Claude設定
 ├── .vscode/          # VSCode設定
 ├── .mcp.json         # Model Context Protocol設定
 ├── AGENTS.md         # エージェント向けガイドライン
-├── CLAUDE.md         # Claude向けプロジェクト説明
-├── TODO.md           # Web Push機能仕様書
 └── README.md         # プロジェクト説明
 ```
 
@@ -34,20 +34,21 @@ server/
 ├── internal/
 │   ├── interfaces/            # インターフェース層（外部インターフェース層）
 │   │   └── http/
-│   │       ├── handler/       # HTTPハンドラー
+│   │       ├── handler/       # HTTPハンドラー（ゲームセッション、クイズ、メッセージ等）
 │   │       ├── dto/           # データ転送オブジェクト
 │   │       └── middleware/    # HTTPミドルウェア
 │   ├── application/           # アプリケーション層
-│   │   ├── service/          # アプリケーションサービス
-│   │   └── usecase/          # ユースケース/インタラクター
+│   │   ├── service/          # アプリケーションサービス（音声生成、画像認識連携）
+│   │   └── usecase/          # ユースケース/インタラクター（ゲームフロー制御）
 │   ├── domain/               # ドメイン層（ビジネスロジック）
-│   │   ├── model/            # ドメインエンティティ（User）
+│   │   ├── model/            # ドメインエンティティ（Session、PlayerAnswer、Message、Quiz）
 │   │   ├── repository/       # リポジトリインターフェース
-│   │   ├── service/          # ドメインサービス
-│   │   └── valueobject/      # 値オブジェクト（Email、UserID）
-│   └── infrastructure/       # インフラストラクチャ層
-│       ├── config/           # 設定
-│       └── persistence/      # データベース実装
+│   │   ├── service/          # ドメインサービス（クイズ生成、タイマー管理）
+│   │   └── valueobject/      # 値オブジェクト（SessionID、PlaceID、QuizID）
+│   ├── infrastructure/       # インフラストラクチャ層
+│   │   ├── config/           # 設定
+│   │   └── persistence/      # データベース実装
+│   └── gen/                  # Protocol Buffers生成コード
 └── pkg/                      # 共有パッケージ
     └── errors/               # エラーハンドリングユーティリティ
 ```
@@ -83,19 +84,35 @@ infra/
 ```
 frontend/
 ├── src/app/                  # App Routerページとレイアウト
-│   ├── camera-filters/      # カメラフィルター機能
-│   │   ├── page.tsx         # カメラフィルターページ
-│   │   ├── page.module.css  # フィルター専用スタイル
-│   │   └── filters.ts       # 画像フィルター実装
+│   ├── game/                # ゲームメインフロー
+│   │   ├── s0/             # 起動・注意書き・許可
+│   │   ├── s1/             # 1942年パート（担当者との会話）
+│   │   ├── s2/             # お気に入りの場所説明
+│   │   ├── s3/             # 移動指示＋ホラー演出
+│   │   ├── s4/             # 診査室：内省質問
+│   │   ├── s5/             # 死亡届受理＋7分制限開始
+│   │   ├── s6/             # 存在証明書探索パート
+│   │   ├── s7/             # 2002年パート
+│   │   ├── s8/             # メインホール探索
+│   │   └── s9/             # 2025年・メッセージ刻み
 │   ├── layout.tsx           # ルートレイアウト
-│   ├── page.tsx             # ホームページ
+│   ├── page.tsx             # ホームページ（QRコード案内）
 │   ├── globals.css          # グローバルスタイル
 │   └── page.module.css      # ページ固有スタイル
+├── src/components/           # 共通コンポーネント
+│   ├── camera/              # カメラ関連
+│   ├── audio/               # 音声再生
+│   ├── horror/              # ホラー演出オーバーレイ
+│   └── quiz/                # クイズUI
+├── src/lib/                 # ユーティリティ
+│   ├── api/                # APIクライアント
+│   └── utils/              # 汎用関数
 ├── public/                   # 静的アセット
+│   ├── fonts/               # フォント（onryou.TTF等）
+│   └── icons/               # アイコン
 ├── .next/                    # Next.jsビルド成果物
 ├── node_modules/             # 依存関係
 ├── Dockerfile                # コンテナビルド定義
-├── CAMERA_memo.md            # カメラ機能実装メモ
 ├── package.json             # 依存関係とスクリプト
 ├── pnpm-lock.yaml           # パッケージロックファイル
 ├── tsconfig.json            # TypeScript設定
@@ -103,14 +120,29 @@ frontend/
 └── eslint.config.mjs        # ESLint設定
 ```
 
+## マイクロサービス構造 (services/)
+
+```
+services/
+└── image_recognition/        # 画像認識サービス（Python + gRPC）
+    ├── app/
+    │   ├── server.py        # gRPCサーバー
+    │   ├── services/        # 画像認識ロジック
+    │   ├── models/          # データモデル
+    │   └── utils/           # ユーティリティ
+    ├── Dockerfile           # コンテナビルド定義
+    ├── pyproject.toml       # Python依存関係
+    └── README.md            # サービス説明
+```
+
 ## アーキテクチャパターン
 
 ### ドメイン層の規約
 
-- **エンティティ**: 振る舞いを持つリッチなドメインオブジェクト（User）
-- **値オブジェクト**: バリデーション付きの不変オブジェクト（Email、UserID）
+- **エンティティ**: 振る舞いを持つリッチなドメインオブジェクト（Session、PlayerAnswer、Message、Quiz）
+- **値オブジェクト**: バリデーション付きの不変オブジェクト（SessionID、PlaceID、QuizID）
 - **リポジトリ**: データアクセス用インターフェース（ドメインで定義、インフラストラクチャで実装）
-- **サービス**: エンティティに属さないドメインロジック
+- **サービス**: エンティティに属さないドメインロジック（クイズ生成、タイマー管理、音声生成連携）
 
 ### 命名規約
 
@@ -157,9 +189,10 @@ GitHub Actionsによる自動デプロイメント：
 ### 現在の実装状況
 
 - レイヤードアーキテクチャ + DDD の完全実装済み
-- PostgreSQLデータベース対応（Web Push用スキーマ含む）
+- PostgreSQLデータベース対応（ゲームセッション、プレイヤー回答、メッセージ保存）
 - Dockerコンテナ化とCI/CD自動デプロイ完備
 - AWS ECS Fargate での本番環境運用中
 - Terraform によるインフラストラクチャ as Code 実装済み
-- Web Push通知システム（RFC準拠、VAPID対応）
-- カメラフィルター機能（リアルタイム画像処理）
+- 画像認識マイクロサービス（gRPC、類似度計算）
+- カメラ機能（撮影、ホラー演出オーバーレイ）
+- VOICEVOX音声生成連携（EC2上で動作）
