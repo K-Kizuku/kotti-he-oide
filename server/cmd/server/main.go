@@ -9,6 +9,7 @@ import (
 	"github.com/K-Kizuku/kotti-he-oide/internal/domain/service"
 	"github.com/K-Kizuku/kotti-he-oide/internal/infrastructure/database"
 	"github.com/K-Kizuku/kotti-he-oide/internal/infrastructure/persistence"
+	"github.com/K-Kizuku/kotti-he-oide/internal/infrastructure/voicevox"
 	"github.com/K-Kizuku/kotti-he-oide/internal/interfaces/http/handler"
 	"github.com/K-Kizuku/kotti-he-oide/pkg/config"
 )
@@ -48,12 +49,16 @@ func main() {
 		log.Fatal("Failed to initialize VAPID service:", err)
 	}
 
+	// VOICEVOXクライアントの初期化
+	voicevoxClient := voicevox.NewClient(cfg.VoicevoxAPIURL)
+
 	// ユースケースの初期化
 	sessionUseCase := usecase.NewSessionUseCase(sessionRepo, sessionService, cfg.SessionTTLMinutes)
 	s4AnswerUseCase := usecase.NewS4AnswerUseCase(sessionAnswerRepo, sessionService)
 	s6UseCase := usecase.NewS6UseCase(s6ProgressRepo, quizService, s6Service, sessionService)
 	messageUseCase := usecase.NewMessageUseCase(messageRepo, sessionService)
 	pushNotificationUseCase := usecase.NewPushNotificationUseCase(pushSubscriptionRepo, pushLogRepo, vapidService)
+	voiceUseCase := usecase.NewVoiceUseCase(voicevoxClient, cfg)
 
 	// ハンドラーの初期化
 	healthHandler := handler.NewHealthHandler()
@@ -62,6 +67,7 @@ func main() {
 	s6Handler := handler.NewS6Handler(s6UseCase)
 	messageHandler := handler.NewMessageHandler(messageUseCase)
 	pushNotificationHandler := handler.NewPushNotificationHandler(pushNotificationUseCase)
+	voiceHandler := handler.NewVoiceHandler(voiceUseCase)
 
 	// ルーティング設定
 	mux := http.NewServeMux()
@@ -98,7 +104,16 @@ func main() {
 	mux.HandleFunc("DELETE /api/push/subscriptions/{subscription_id}", pushNotificationHandler.Unsubscribe)
 	mux.HandleFunc("POST /api/push/send/{session_id}", pushNotificationHandler.SendPush)
 
+	// Voice API
+	mux.HandleFunc("POST /api/voice/generate", voiceHandler.GenerateVoice)
+
+	// 静的ファイル配信（音声ファイル）
+	audioFileServer := http.FileServer(http.Dir(cfg.AudioOutputDir))
+	mux.Handle("/audio/", http.StripPrefix("/audio/", audioFileServer))
+
 	log.Printf("Server starting on port %s", cfg.ServerPort)
+	log.Printf("VOICEVOX API URL: %s", cfg.VoicevoxAPIURL)
+	log.Printf("Audio output directory: %s", cfg.AudioOutputDir)
 	if err := http.ListenAndServe(":"+cfg.ServerPort, corsHandler); err != nil {
 		log.Fatal("Server failed to start:", err)
 	}
