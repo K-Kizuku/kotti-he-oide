@@ -378,4 +378,3 @@ class GameFlowManager {
 const gameFlowManager = new GameFlowManager();
 
 export default gameFlowManager;
-export { type GameError };

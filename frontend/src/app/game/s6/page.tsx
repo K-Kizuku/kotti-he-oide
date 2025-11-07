@@ -89,7 +89,7 @@ export default function S6Page() {
   }, [session]);
 
   // タイマー完了ハンドラ
-  function handleTimerComplete() {
+  async function handleTimerComplete() {
     // 全ピース取得済みなら次へ進める
     const allCompleted = FAVORITE_PLACES.every(
       (place) => placeStatuses[place.id]?.correct
