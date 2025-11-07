@@ -2,6 +2,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 # Install required system packages
 RUN apk add --no-cache libc6-compat
+ENV CI=true
 # Install dependencies based on lockfile
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && pnpm install --frozen-lockfile
