@@ -13,7 +13,8 @@ export default function Home() {
       <main className={styles.main}>
         <section style={{ textAlign: "center", padding: "2rem" }}>
           <h1 style={{ fontSize: "2rem", marginBottom: "1rem" }}>
-            赤煉瓦文化館 〜こっちにおいで〜
+            赤煉瓦文化館 <br />
+            〜こっちにおいで〜
           </h1>
           <p style={{ marginBottom: "2rem", color: "#666" }}>
             体験型Webホラーゲーム
@@ -28,7 +29,7 @@ export default function Home() {
               color: "#fff",
               textDecoration: "none",
               borderRadius: "4px",
-              fontSize: "1.2rem"
+              fontSize: "1.2rem",
             }}
           >
             ゲームを開始
