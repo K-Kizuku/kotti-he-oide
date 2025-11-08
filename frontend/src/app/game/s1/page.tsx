@@ -153,7 +153,7 @@ export default function S1Page() {
     <div className={styles.container}>
       {/* カメラプレビュー（背景） */}
       <div className={styles.cameraBackground}>
-        <CameraPreview facingMode="environment" />
+        <CameraPreview facingMode="environment" filterId="horror" />
         <div className={styles.darkOverlay} />
       </div>
 

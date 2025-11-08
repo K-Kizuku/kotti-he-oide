@@ -9,19 +9,25 @@
    字幕エリア
    ======================================== */
 .subtitle {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  width: calc(100% - 2rem);
+  max-width: 500px;
   padding: 1.5rem;
   background: var(--overlay-bg);
   border: 2px solid var(--border-subtle);
   border-radius: 8px;
   backdrop-filter: blur(10px);
   opacity: 0;
-  transform: translateY(10px);
   transition: all 0.3s ease;
+  z-index: 100;
 }
 
 .subtitle.active {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
 }
 
 .subtitle p {

@@ -20,28 +20,59 @@ export type FilterSpec = {
 };
 
 export const FILTERS: FilterSpec[] = [
-  { id: "retro", label: "レトロ（セピア/ビネット/粒子）", description: "セピア + 周辺減光 + フィルム粒子" },
-  { id: "horror", label: "ホラー（低彩度/緑被り/強コントラスト）", description: "寒色寄りの恐怖演出" },
-  { id: "serious", label: "シリアス（ノワール調）", description: "低彩度 + 強コントラスト + 軽いビネット" },
-  { id: "vhs", label: "VHS/グリッチ（色ずれ/走査線）", description: "色チャンネルのずれ + 走査線" },
-  { id: "comic", label: "コミック（ポスタライズ/輪郭）", description: "色段階化 + Sobel輪郭" },
-  { id: "vignette", label: "ビネット（周辺減光のみ）", description: "映像の周辺を暗く落として被写体を強調" },
+  {
+    id: "retro",
+    label: "レトロ（セピア/ビネット/粒子）",
+    description: "セピア + 周辺減光 + フィルム粒子",
+  },
+  {
+    id: "horror",
+    label: "ホラー（低彩度/緑被り/強コントラスト）",
+    description: "寒色寄りの恐怖演出",
+  },
+  {
+    id: "serious",
+    label: "シリアス（ノワール調）",
+    description: "低彩度 + 強コントラスト + 軽いビネット",
+  },
+  {
+    id: "vhs",
+    label: "VHS/グリッチ（色ずれ/走査線）",
+    description: "色チャンネルのずれ + 走査線",
+  },
+  {
+    id: "comic",
+    label: "コミック（ポスタライズ/輪郭）",
+    description: "色段階化 + Sobel輪郭",
+  },
+  {
+    id: "vignette",
+    label: "ビネット（周辺減光のみ）",
+    description: "映像の周辺を暗く落として被写体を強調",
+  },
   {
     id: "customVignette",
     label: "カスタムビネット（#269f7e/ノイズ/影/強）",
-    description: "#269f7e カラー被せ + 粒状ノイズ + 黒いシャドウ + 強いビネット",
+    description:
+      "#269f7e カラー被せ + 粒状ノイズ + 黒いシャドウ + 強いビネット",
   },
 ];
 
 const clampByte = (v: number) => (v < 0 ? 0 : v > 255 ? 255 : v) | 0;
 
-const toGray = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const toGray = (r: number, g: number, b: number) =>
+  0.2126 * r + 0.7152 * g + 0.0722 * b;
 
 function adjustContrast(v: number, factor: number) {
   return clampByte((v - 128) * factor + 128);
 }
 
-function applyVignette(data: Uint8ClampedArray, w: number, h: number, strength = 0.4) {
+function applyVignette(
+  data: Uint8ClampedArray,
+  w: number,
+  h: number,
+  strength = 0.4
+) {
   const cx = w * 0.5;
   const cy = h * 0.5;
   const maxD = Math.sqrt(cx * cx + cy * cy);
@@ -64,7 +95,12 @@ export function applyVignetteOnly(image: ImageData) {
   applyVignette(data, w, h, 0.5);
 }
 
-function addScanlines(data: Uint8ClampedArray, w: number, h: number, darkness = 0.12) {
+function addScanlines(
+  data: Uint8ClampedArray,
+  w: number,
+  h: number,
+  darkness = 0.12
+) {
   for (let y = 0; y < h; y += 2) {
     const factor = 1 - darkness;
     for (let x = 0; x < w; x++) {
@@ -154,7 +190,7 @@ export function applyRetro(image: ImageData) {
 
 export function applyHorror(image: ImageData) {
   const { data } = image;
-  // 低彩度 + 強コントラスト + 緑被り + シャドウノイズ
+  // 低彩度 + 強コントラスト + 緑被り + 強ノイズ
   for (let i = 0; i < data.length; i += 4) {
     const r = data[i];
     const g = data[i + 1];
@@ -165,19 +201,20 @@ export function applyHorror(image: ImageData) {
     let ng = g * 0.3 + gray * 0.7;
     let nb = b * 0.3 + gray * 0.7;
     // 緑被り（寒色寄り）
-    nr *= 0.92;
-    ng *= 1.08;
+    nr *= 0.96;
+    ng *= 1.04;
     nb *= 0.95;
     // コントラスト強調
     nr = adjustContrast(nr, 1.45);
     ng = adjustContrast(ng, 1.45);
     nb = adjustContrast(nb, 1.45);
-    // シャドウにノイズ
+    // 全体に強めのノイズを追加（暗部はさらに強く）
     const v = (nr + ng + nb) / 3;
-    const noise = v < 80 ? (Math.random() - 0.5) * 24 : 0;
+    const noiseAmount = v < 100 ? 40 : 28;
+    const noise = (Math.random() - 0.5) * noiseAmount;
     data[i] = clampByte(nr + noise);
-    data[i + 1] = clampByte(ng + noise * 0.6);
-    data[i + 2] = clampByte(nb + noise * 0.4);
+    data[i + 1] = clampByte(ng + noise * 0.7);
+    data[i + 2] = clampByte(nb + noise * 0.5);
   }
   applyVignette(image.data, image.width, image.height, 0.6);
   addScanlines(image.data, image.width, image.height, 0.1);

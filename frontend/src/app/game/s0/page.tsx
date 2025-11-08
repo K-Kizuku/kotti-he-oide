@@ -6,20 +6,21 @@
  * - 言語選択（日本語/English）
  */
 
-'use client';
+"use client";
 
-import { useState } from 'react';
-import styles from './page.module.css';
-import Button from '@/components/ui/Button';
-import Modal from '@/components/ui/Modal';
-import { useGameFlow } from '@/hooks/useGameFlow';
+import { useState } from "react";
+import styles from "./page.module.css";
+import Button from "@/components/ui/Button";
+import Modal from "@/components/ui/Modal";
+import { useGameFlow } from "@/hooks/useGameFlow";
+import GlitchText from "@/components/horror/GlitchText";
 
-type Language = 'ja' | 'en';
+type Language = "ja" | "en";
 
 export default function S0Page() {
   const { session, isInitialized, transitionTo } = useGameFlow();
 
-  const [language, setLanguage] = useState<Language>('ja');
+  const [language, setLanguage] = useState<Language>("ja");
   const [cameraPermission, setCameraPermission] = useState(false);
   const [audioPermission, setAudioPermission] = useState(false);
   const [acceptedWarning, setAcceptedWarning] = useState(false);
@@ -28,42 +29,42 @@ export default function S0Page() {
 
   const texts = {
     ja: {
-      title: '赤煉瓦文化館\n〜こっちにおいで〜',
-      subtitle: '体験型Webホラーゲーム',
-      languageLabel: '言語 / Language',
-      requirementsTitle: '必要な準備',
-      cameraLabel: 'カメラへのアクセス',
-      audioLabel: '音声の再生',
-      earphoneLabel: 'イヤホンまたはヘッドホンの装着',
-      earphoneNote: '※ 推奨',
-      warningTitle: '⚠️ 注意事項',
+      title: "赤煉瓦文化館\n〜こっちにおいで〜",
+      subtitle: "体験型Webホラーゲーム",
+      languageLabel: "言語 / Language",
+      requirementsTitle: "必要な準備",
+      cameraLabel: "カメラへのアクセス",
+      audioLabel: "音声の再生",
+      earphoneLabel: "イヤホンまたはヘッドホンの装着",
+      earphoneNote: "※ 推奨",
+      warningTitle: "⚠️ 注意事項",
       warningContent:
-        'このゲームにはホラー要素が含まれます。\n驚かせる演出、不快な音声、暗い映像表現があります。\n\n心臓が弱い方、体調の優れない方はプレイをお控えください。',
-      acceptWarning: '内容を理解し、同意します',
-      requestPermissions: '許可をリクエスト',
-      permissionGranted: '✓ 許可済み',
-      startGame: 'ゲームを開始',
+        "このゲームにはホラー要素が含まれます。\n驚かせる演出、不快な音声、暗い映像表現があります。\n\n心臓が弱い方、体調の優れない方はプレイをお控えください。",
+      acceptWarning: "内容を理解し、同意します",
+      requestPermissions: "許可をリクエスト",
+      permissionGranted: "✓ 許可済み",
+      startGame: "ゲームを開始",
       permissionError:
-        'カメラまたは音声の許可が拒否されました。\nブラウザの設定から許可してください。',
+        "カメラまたは音声の許可が拒否されました。\nブラウザの設定から許可してください。",
     },
     en: {
-      title: 'Red Brick Cultural Hall\n〜Come This Way〜',
-      subtitle: 'Interactive Web Horror Game',
-      languageLabel: 'Language / 言語',
-      requirementsTitle: 'Requirements',
-      cameraLabel: 'Camera Access',
-      audioLabel: 'Audio Playback',
-      earphoneLabel: 'Earphones or Headphones',
-      earphoneNote: '※ Recommended',
-      warningTitle: '⚠️ Warning',
+      title: "Red Brick Cultural Hall\n〜Come This Way〜",
+      subtitle: "Interactive Web Horror Game",
+      languageLabel: "Language / 言語",
+      requirementsTitle: "Requirements",
+      cameraLabel: "Camera Access",
+      audioLabel: "Audio Playback",
+      earphoneLabel: "Earphones or Headphones",
+      earphoneNote: "※ Recommended",
+      warningTitle: "⚠️ Warning",
       warningContent:
-        'This game contains horror elements.\nIncludes jump scares, disturbing audio, and dark visuals.\n\nNot recommended for those with heart conditions or feeling unwell.',
-      acceptWarning: 'I understand and agree',
-      requestPermissions: 'Request Permissions',
-      permissionGranted: '✓ Granted',
-      startGame: 'Start Game',
+        "This game contains horror elements.\nIncludes jump scares, disturbing audio, and dark visuals.\n\nNot recommended for those with heart conditions or feeling unwell.",
+      acceptWarning: "I understand and agree",
+      requestPermissions: "Request Permissions",
+      permissionGranted: "✓ Granted",
+      startGame: "Start Game",
       permissionError:
-        'Camera or audio permission denied.\nPlease allow access in browser settings.',
+        "Camera or audio permission denied.\nPlease allow access in browser settings.",
     },
   };
 
@@ -75,7 +76,7 @@ export default function S0Page() {
     try {
       // カメラ許可
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: { facingMode: "environment" },
         audio: false,
       });
 
@@ -88,7 +89,7 @@ export default function S0Page() {
       audioContext.close();
       setAudioPermission(true);
     } catch (error) {
-      console.error('Permission error:', error);
+      console.error("Permission error:", error);
       alert(t.permissionError);
     } finally {
       setIsRequestingPermissions(false);
@@ -100,7 +101,7 @@ export default function S0Page() {
 
   const handleStart = async () => {
     if (canStart) {
-      await transitionTo('s1');
+      await transitionTo("s1");
     }
   };
 
@@ -126,15 +127,15 @@ export default function S0Page() {
           <label className={styles.label}>{t.languageLabel}</label>
           <div className={styles.languageButtons}>
             <Button
-              variant={language === 'ja' ? 'primary' : 'secondary'}
-              onClick={() => setLanguage('ja')}
+              variant={language === "ja" ? "primary" : "secondary"}
+              onClick={() => setLanguage("ja")}
               size="medium"
             >
               日本語
             </Button>
             <Button
-              variant={language === 'en' ? 'primary' : 'secondary'}
-              onClick={() => setLanguage('en')}
+              variant={language === "en" ? "primary" : "secondary"}
+              onClick={() => setLanguage("en")}
               size="medium"
             >
               English
@@ -189,7 +190,10 @@ export default function S0Page() {
         <section className={styles.section}>
           <div className={styles.warningBox}>
             <h3 className={styles.warningTitle}>{t.warningTitle}</h3>
-            <p className={styles.warningText}>{t.warningContent}</p>
+            <GlitchText intensity="low">
+              {t.warningContent}
+              {/* <p className={styles.warningText}></p> */}
+            </GlitchText>
           </div>
 
           <label className={styles.checkbox}>
@@ -222,7 +226,7 @@ export default function S0Page() {
         onClose={() => setShowWarningModal(false)}
         title={t.warningTitle}
       >
-        <p style={{ whiteSpace: 'pre-line' }}>{t.warningContent}</p>
+        <p style={{ whiteSpace: "pre-line" }}>{t.warningContent}</p>
       </Modal>
     </div>
   );
